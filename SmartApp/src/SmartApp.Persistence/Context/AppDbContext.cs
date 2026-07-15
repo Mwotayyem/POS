@@ -1,6 +1,7 @@
 using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using SmartApp.Application.Common.Interfaces;
+using SmartApp.Domain.Catalog;
 using SmartApp.Domain.Common;
 using SmartApp.Domain.Identity;
 using SmartApp.Domain.Tenancy;
@@ -45,6 +46,15 @@ public sealed class AppDbContext : DbContext, IApplicationDbContext
     public DbSet<RolePermission> RolePermissions => Set<RolePermission>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 
+    // ---- Catalog DbSets (Phase 7) ----
+    public DbSet<Category> Categories => Set<Category>();
+    public DbSet<Unit> Units => Set<Unit>();
+    public DbSet<Brand> Brands => Set<Brand>();
+    public DbSet<Product> Products => Set<Product>();
+    public DbSet<ProductUnit> ProductUnits => Set<ProductUnit>();
+    public DbSet<ProductBarcode> ProductBarcodes => Set<ProductBarcode>();
+    public DbSet<ProductPrice> ProductPrices => Set<ProductPrice>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -60,6 +70,11 @@ public sealed class AppDbContext : DbContext, IApplicationDbContext
                 .ToTable(t => t.HasCheckConstraint(
                     "CK_TenantSettings_Theme_Json",
                     "[ThemeJson] IS NULL OR ISJSON([ThemeJson]) = 1"));
+
+            modelBuilder.Entity<Product>()
+                .ToTable(t => t.HasCheckConstraint(
+                    "CK_Products_Custom_Json",
+                    "[CustomFieldsJson] IS NULL OR ISJSON([CustomFieldsJson]) = 1"));
         }
 
         bool isSqlServer = Database.IsSqlServer();

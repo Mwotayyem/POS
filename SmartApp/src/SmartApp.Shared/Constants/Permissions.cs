@@ -34,6 +34,40 @@ public static class Permissions
         public const string Manage = "settings.manage";
     }
 
+    // ---- Catalog module (Phase 7) ----
+
+    public static class Categories
+    {
+        public const string View = "catalog.categories.view";
+        public const string Create = "catalog.categories.create";
+        public const string Update = "catalog.categories.update";
+        public const string Delete = "catalog.categories.delete";
+    }
+
+    public static class Units
+    {
+        public const string View = "catalog.units.view";
+        public const string Create = "catalog.units.create";
+        public const string Update = "catalog.units.update";
+        public const string Delete = "catalog.units.delete";
+    }
+
+    public static class Brands
+    {
+        public const string View = "catalog.brands.view";
+        public const string Create = "catalog.brands.create";
+        public const string Update = "catalog.brands.update";
+        public const string Delete = "catalog.brands.delete";
+    }
+
+    public static class Products
+    {
+        public const string View = "catalog.products.view";
+        public const string Create = "catalog.products.create";
+        public const string Update = "catalog.products.update";
+        public const string Delete = "catalog.products.delete";
+    }
+
     public static class System
     {
         /// <summary>System-owner only — manage tenants (create/activate/suspend/disable).</summary>

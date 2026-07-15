@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using SmartApp.Domain.Catalog;
 using SmartApp.Domain.Identity;
 using SmartApp.Domain.Tenancy;
 
@@ -24,6 +25,15 @@ public interface IApplicationDbContext
     DbSet<UserRole> UserRoles { get; }
     DbSet<RolePermission> RolePermissions { get; }
     DbSet<RefreshToken> RefreshTokens { get; }
+
+    // ---- Catalog ----
+    DbSet<Category> Categories { get; }
+    DbSet<Unit> Units { get; }
+    DbSet<Brand> Brands { get; }
+    DbSet<Product> Products { get; }
+    DbSet<ProductUnit> ProductUnits { get; }
+    DbSet<ProductBarcode> ProductBarcodes { get; }
+    DbSet<ProductPrice> ProductPrices { get; }
 
     /// <summary>
     /// Persists pending changes. Tenant stamping, soft-delete conversion, and audit-field

@@ -34,6 +34,30 @@ public static class PermissionCatalog
         new(Permissions.Settings.View, "settings", "عرض إعدادات المستأجر"),
         new(Permissions.Settings.Manage, "settings", "تعديل إعدادات المستأجر"),
 
+        // ---- Catalog: Categories ----
+        new(Permissions.Categories.View, "catalog", "عرض التصنيفات"),
+        new(Permissions.Categories.Create, "catalog", "إنشاء تصنيف"),
+        new(Permissions.Categories.Update, "catalog", "تعديل تصنيف"),
+        new(Permissions.Categories.Delete, "catalog", "حذف تصنيف"),
+
+        // ---- Catalog: Units ----
+        new(Permissions.Units.View, "catalog", "عرض وحدات القياس"),
+        new(Permissions.Units.Create, "catalog", "إنشاء وحدة قياس"),
+        new(Permissions.Units.Update, "catalog", "تعديل وحدة قياس"),
+        new(Permissions.Units.Delete, "catalog", "حذف وحدة قياس"),
+
+        // ---- Catalog: Brands ----
+        new(Permissions.Brands.View, "catalog", "عرض العلامات التجارية"),
+        new(Permissions.Brands.Create, "catalog", "إنشاء علامة تجارية"),
+        new(Permissions.Brands.Update, "catalog", "تعديل علامة تجارية"),
+        new(Permissions.Brands.Delete, "catalog", "حذف علامة تجارية"),
+
+        // ---- Catalog: Products (incl. barcodes & prices, managed under the product) ----
+        new(Permissions.Products.View, "catalog", "عرض المنتجات"),
+        new(Permissions.Products.Create, "catalog", "إنشاء منتج"),
+        new(Permissions.Products.Update, "catalog", "تعديل منتج"),
+        new(Permissions.Products.Delete, "catalog", "حذف منتج"),
+
         // ---- System (owner only) ----
         new(Permissions.System.ManageTenants, "system", "إدارة المستأجرين"),
     ];

@@ -2,7 +2,24 @@
 
 > **Solution فعلية** مبنية على **Clean Architecture** و **.NET 9**، متعدّدة المستأجرين (Multi-Tenant) بعزل تامّ للبيانات وإدارة تفعيل يدوية للعملاء — **بلا اشتراكات ولا فوترة ولا مدفوعات**.
 
-**الحالة:** ✅ Phase 1–6 مكتملة. Foundation + Tenant Core + Identity & RBAC + API Foundation + Authentication + **Administration (Users/Roles/Permissions/Settings/Profile)**. **36/36 اختبار تمرّ** · إدارة كاملة عبر REST.
+**الحالة:** ✅ Phase 1–7 مكتملة. Foundation + Tenant Core + Identity & RBAC + API + Authentication + Administration + **Catalog Module (Categories/Units/Brands/Products/Barcodes/Prices)**. **61/61 اختبار تمرّ** · أول Business Module جاهز.
+
+---
+
+## ما أُنجز في Phase 7 (Catalog Module)
+
+أول Business Module — كتالوج المنتجات، بنفس القوالب (CQRS · Clean Architecture · Tenant Isolation · Response Envelope · Validation · Authorization). مبني مطابقةً لـ [06-Tables-Definitions.md §3](../SmartApp-Architecture/06-Tables-Definitions.md).
+
+- ✅ **7 كيانات:** `Category` (شجرة عبر ParentId + SortOrder)، `Unit` (Name/Symbol/Precision)، `Brand` (greenfield)، `Product` (SKU/Category/Brand/BaseUnit/Cost/Sale/Tax/TrackStock/ReorderLevel/CustomFieldsJson)، `ProductUnit` (معامل تحويل DECIMAL(18,6))، `ProductBarcode` (متعدّد + Primary)، `ProductPrice` (أنواع أسعار: Retail/Wholesale/Distributor/Online).
+- ✅ **EF Configurations** — فهارس فريدة مُفلترة per-tenant (`UX_Products_Tenant_Sku` · `UX_ProductBarcodes_Tenant_Barcode` · `UX_Units_Tenant_Name` · `UX_Brands_Tenant_Name` · `UX_ProductPrices_Tenant_Product_Type`)، قيود `CHECK` (أسعار ≥ 0، معامل تحويل > 0)، FKs بـ `NO ACTION`، ROWVERSION، `ISJSON` مُقيَّد بـ SQL Server.
+- ✅ **CQRS كامل** — CRUD لكل من Categories/Units/Brands/Products + validators. المنتج يُنشأ/يُحدَّث مع مجموعاته الفرعية (units/barcodes/prices) في معاملة واحدة.
+- ✅ **قواعد أعمال** — منع دورة التصنيفات (لا يكون أباً لنفسه أو لأحد فروعه)، منع حذف تصنيف له فروع/منتجات، منع حذف وحدة/علامة مستخدمة، تفرّد SKU والباركود على مستوى المستأجر، باركود رئيسي واحد كحدّ أقصى.
+- ✅ **API Controllers** — `/api/v1/categories` · `/units` · `/brands` · `/products` (بحث + فلترة category/brand)، كلها محميّة بـ `[HasPermission("catalog.*")]`.
+- ✅ **Migration `AddCatalog`** — 7 جداول بكل الفهارس والقيود. **بلا model drift**.
+- ✅ **Swagger** — كل الـ endpoints موثّقة تلقائياً.
+- ✅ **اختبارات (25 جديدة، 61/61 إجمالاً):** CRUD لكل كيان · عزل المستأجرين (كيان مستأجر آخر → 404) · authorization (403 بلا صلاحية) · validation (اسم فارغ/precision>6/SKU مكرّر/باركود مكرّر/باركودان رئيسيان/وحدة أساس غير موجودة) · دورة التصنيفات · حراسة الحذف.
+
+> **لم يُنشأ بعد:** Inventory (Warehouses/Stock/Movements) · Purchasing · Sales · Frontend.
 
 ---
 
@@ -182,9 +199,9 @@ dotnet run --project src/SmartApp.API
 
 ---
 
-## المرحلة التالية (Next: Business Modules)
+## المرحلة التالية (Next: Phase 8 — Inventory)
 
-**أول Business Module** (مثل Products/Catalog) فوق الأساس الجاهز: Domain entities + configs + migration + CQRS endpoints + tests — بنفس قوالب العزل والتحقّق والصلاحيات. التفاصيل في [14-Implementation-Roadmap.md](../SmartApp-Architecture/14-Implementation-Roadmap.md).
+**Inventory Module:** Warehouses + Stock (QtyOnHand/AvgCost) + StockMovements (Append-Only: IN/OUT/ADJUST/TRANSFER — غير قابلة للحذف، كل تعديل مخزون يولّد Movement) + Adjustments + Transfers. التفاصيل في [14-Implementation-Roadmap.md](../SmartApp-Architecture/14-Implementation-Roadmap.md).
 
 ---
 
@@ -194,4 +211,4 @@ dotnet run --project src/SmartApp.API
 
 ---
 
-_SmartApp · Phase 1–6 (Foundation → Administration) · بُني على .NET 9 · Clean Architecture._
+_SmartApp · Phase 1–7 (Foundation → Catalog) · بُني على .NET 9 · Clean Architecture._
