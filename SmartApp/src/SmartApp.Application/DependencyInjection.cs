@@ -1,6 +1,8 @@
 using System.Reflection;
 using FluentValidation;
+using MediatR;
 using Microsoft.Extensions.DependencyInjection;
+using SmartApp.Application.Common.Behaviors;
 
 namespace SmartApp.Application;
 
@@ -21,15 +23,10 @@ public static class DependencyInjection
         // Validation — FluentValidation scans this assembly for AbstractValidator implementations.
         services.AddValidatorsFromAssembly(assembly);
 
-        // NOTE (Phase 3): AutoMapper profiles will be registered here once a mapping
-        // library/version is finalized. Deferred in Phase 1 — no mapping code exists yet.
-        // services.AddAutoMapper(assembly);
+        // MediatR pipeline behaviors (order matters). Validation runs before every handler.
+        services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
 
-        // NOTE (Phase 2+): MediatR pipeline behaviors are registered here in order:
-        // Logging -> Validation -> TenantGuard -> Transaction.
-        // See SmartApp-Architecture/02-Solution-Architecture.md §4.
-        // services.AddTransient(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));
-        // services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+        // NOTE (later): AutoMapper profiles registered here once a mapping library is finalized.
 
         return services;
     }

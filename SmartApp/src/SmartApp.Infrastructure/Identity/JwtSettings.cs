@@ -1,10 +1,9 @@
-namespace SmartApp.API.Configuration;
+namespace SmartApp.Infrastructure.Identity;
 
 /// <summary>
-/// Strongly-typed JWT settings bound from configuration ("Jwt" section).
-/// Placeholder structure for Phase 1 — consumed by authentication in Phase 3.
-/// Secrets (SigningKey) are supplied via user-secrets / environment / secret store,
-/// never committed — see SmartApp-Architecture/11-Security-Architecture.md §5.
+/// Strongly-typed JWT settings bound from the "Jwt" configuration section. The signing key is a
+/// secret supplied via user-secrets / environment / secret store — never committed.
+/// See SmartApp-Architecture/10-Identity-RBAC.md §4 and 11-Security-Architecture.md §5.
 /// </summary>
 public sealed class JwtSettings
 {

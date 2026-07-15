@@ -1,4 +1,3 @@
-using SmartApp.API.Configuration;
 using SmartApp.API.Extensions;
 using SmartApp.API.Middleware;
 using SmartApp.Application;
@@ -12,9 +11,8 @@ var builder = WebApplication.CreateBuilder(args);
 // appsettings.json + appsettings.{Environment}.json + environment variables +
 // (Development) user-secrets are loaded by the default host builder.
 // Secrets (JWT key, connection string) come from user-secrets / env, never source.
+// JwtSettings is bound inside AddInfrastructure (the layer that owns the JWT service).
 // ---------------------------------------------------------------------------
-builder.Services.Configure<JwtSettings>(
-    builder.Configuration.GetSection(JwtSettings.SectionName));
 
 // ---------------------------------------------------------------------------
 // Composition Root — wire each layer's DI in dependency order.
@@ -45,9 +43,11 @@ if (!app.Environment.IsProduction())
 
 app.UseHttpsRedirection();
 
-// 3) AuthN -> TenantResolution -> AuthZ  (implementations arrive in Phase 2/3).
-// app.UseAuthentication();
-// app.UseTenantResolution();
+// 3) AuthN -> TenantResolution -> AuthZ.
+// TenantResolution runs after authentication so it can read the tenant claim, and before
+// authorization so an inactive tenant is rejected early.
+app.UseAuthentication();
+app.UseTenantResolution();
 app.UseAuthorization();
 
 app.MapControllers();

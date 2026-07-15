@@ -1,17 +1,20 @@
 using System.Net;
 using System.Text.Json;
+using SmartApp.API.Extensions;
+using SmartApp.Application.Common.Exceptions;
+using SmartApp.Shared.Results;
 
 namespace SmartApp.API.Middleware;
 
 /// <summary>
-/// Global exception handling. Converts any unhandled exception into the unified
-/// error envelope described in SmartApp-Architecture/12-API-Architecture.md §4.
-/// Phase 1: baseline structure. Application-specific exceptions
-/// (ValidationException, NotFoundException, ForbiddenException, BusinessRuleViolationException,
-/// concurrency conflicts) are mapped here as they are introduced in later phases.
+/// Global exception handling. Converts unhandled exceptions into the unified error envelope
+/// (SmartApp-Architecture/12-API-Architecture.md §4). Known application exceptions are mapped to
+/// specific error codes/status; anything else becomes a generic 500 (details logged, never leaked).
 /// </summary>
 public sealed partial class ExceptionHandlingMiddleware
 {
+    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+
     private readonly RequestDelegate _next;
     private readonly ILogger<ExceptionHandlingMiddleware> _logger;
 
@@ -21,7 +24,6 @@ public sealed partial class ExceptionHandlingMiddleware
         _logger = logger;
     }
 
-    // Source-generated, allocation-free logging delegate (CA1848 best practice).
     [LoggerMessage(EventId = 1000, Level = LogLevel.Error,
         Message = "Unhandled exception. CorrelationId: {CorrelationId}")]
     private partial void LogUnhandled(Exception ex, string correlationId);
@@ -32,35 +34,34 @@ public sealed partial class ExceptionHandlingMiddleware
         {
             await _next(context);
         }
+        catch (ValidationException ex)
+        {
+            Error error = Error.Validation("بيانات غير صحيحة.", ex.Errors);
+            await WriteAsync(context, HttpStatusCode.BadRequest, error);
+        }
         catch (Exception ex)
         {
-            // Never leak internal details to the client — log with correlation id, return generic envelope.
             string correlationId = context.TraceIdentifier;
             LogUnhandled(ex, correlationId);
-            await WriteErrorAsync(context, HttpStatusCode.InternalServerError, "INTERNAL_ERROR",
-                "حدث خطأ غير متوقّع. الرجاء المحاولة لاحقاً.", correlationId);
+            await WriteAsync(context, HttpStatusCode.InternalServerError,
+                Error.Internal("حدث خطأ غير متوقّع. الرجاء المحاولة لاحقاً."));
         }
     }
 
-    private static async Task WriteErrorAsync(
-        HttpContext context,
-        HttpStatusCode statusCode,
-        string code,
-        string message,
-        string correlationId)
+    private static async Task WriteAsync(HttpContext context, HttpStatusCode statusCode, Error error)
     {
+        // Don't try to write a body if the response has already started.
+        if (context.Response.HasStarted)
+        {
+            return;
+        }
+
+        context.Response.Clear();
         context.Response.ContentType = "application/json";
         context.Response.StatusCode = (int)statusCode;
 
-        var payload = new
-        {
-            success = false,
-            data = (object?)null,
-            error = new { code, message },
-            meta = new { correlationId, timestamp = DateTime.UtcNow.ToString("O") },
-        };
-
-        await context.Response.WriteAsync(JsonSerializer.Serialize(payload));
+        ApiResponse<object> payload = ApiResponse.Fail<object>(error, context.TraceIdentifier);
+        await context.Response.WriteAsync(JsonSerializer.Serialize(payload, JsonOptions));
     }
 }
 

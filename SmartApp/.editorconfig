@@ -22,7 +22,9 @@ csharp_prefer_braces = true:suggestion
 csharp_style_var_for_built_in_types = false:suggestion
 csharp_style_var_when_type_is_apparent = true:suggestion
 dotnet_style_qualification_for_field = false:suggestion
-dotnet_style_require_accessibility_modifiers = always:warning
+# 'always' but interface members are implicitly public — exclude them so IDE0040
+# does not flag interface property/method declarations.
+dotnet_style_require_accessibility_modifiers = for_non_interface_members:warning
 
 # قواعد التسمية (Naming) — PascalCase / camelCase / _camelCase / I-prefix
 dotnet_naming_rule.interfaces_should_be_prefixed_with_i.severity = warning
@@ -45,3 +47,19 @@ indent_size = 2
 
 [*.md]
 trim_trailing_whitespace = false
+
+# ===== Generated EF Core migrations — exempt from style analysis =====
+[**/Migrations/*.cs]
+generated_code = true
+dotnet_analyzer_diagnostic.severity = none
+
+# ===== Test projects — allow underscores in test method names (Given_When_Then) =====
+[tests/**/*.cs]
+dotnet_diagnostic.CA1707.severity = none
+
+# ===== CA1716: 'Shared' namespace is intentional (project name); C#-only solution =====
+[*.cs]
+dotnet_diagnostic.CA1716.severity = none
+
+# ===== CA1711: 'Permission'/'RolePermission' are the authoritative domain entity names =====
+dotnet_diagnostic.CA1711.severity = none
