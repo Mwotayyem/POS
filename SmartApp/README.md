@@ -2,7 +2,24 @@
 
 > **Solution فعلية** مبنية على **Clean Architecture** و **.NET 9**، متعدّدة المستأجرين (Multi-Tenant) بعزل تامّ للبيانات وإدارة تفعيل يدوية للعملاء — **بلا اشتراكات ولا فوترة ولا مدفوعات**.
 
-**الحالة:** ✅ Phase 1–5 مكتملة. Foundation + Tenant Core + Identity & RBAC + **API Foundation + Authentication**. **13/13 اختبار تمرّ** · أول endpoints فعلية.
+**الحالة:** ✅ Phase 1–6 مكتملة. Foundation + Tenant Core + Identity & RBAC + API Foundation + Authentication + **Administration (Users/Roles/Permissions/Settings/Profile)**. **36/36 اختبار تمرّ** · إدارة كاملة عبر REST.
+
+---
+
+## ما أُنجز في Phase 6 (Administration Foundation)
+
+طبقة إدارة كاملة عبر REST، بنفس القوالب (CQRS · Clean Architecture · Tenant Isolation · Response Envelope · Validation · Authorization Policies):
+
+- ✅ **Users Management** — `GET /api/v1/users` (بحث) · `GET /users/{id}` · `POST /users` (إنشاء + إسناد أدوار) · `PUT /users/{id}` (تعديل + مطابقة الأدوار) · `POST /users/{id}/activate` · `POST /users/{id}/deactivate` (يُبطِل refresh tokens النشطة).
+- ✅ **Roles Management (RBAC)** — CRUD كامل (`GET`/`POST`/`PUT`/`DELETE /api/v1/roles`) + `PUT /roles/{id}/permissions` (إسناد الصلاحيات) · حماية الأدوار النظامية (Owner) من التعديل/الحذف · منع حذف دور مُسنَد لمستخدمين.
+- ✅ **Permissions Management** — `GET /api/v1/permissions` (قراءة فقط — الكتالوج ثابت مُعرَّف بالنظام؛ الإسناد يتمّ عبر الأدوار).
+- ✅ **Tenant Settings** — `GET /api/v1/tenant/settings` (يُرجع الافتراضيات إن لم تُضبَط) · `PUT` (upsert: عملة/منطقة زمنية/ضريبة/locale/theme JSON مُتحقَّق منه).
+- ✅ **Current User Profile** — `GET /api/v1/profile` (الهوية + الأدوار + الصلاحيات الفعلية) · `PUT /profile` (تعديل ذاتي) · `POST /profile/change-password` (تحقّق كلمة المرور الحالية + إبطال الجلسات). **مصادقة فقط، بلا صلاحية محدّدة.**
+- ✅ **Seeding** — `PermissionSeeder` (يزرع الكتالوج عند الإقلاع، idempotent) + `TenantRoleSeeder` (دور Owner بكل الصلاحيات لكل مستأجر). أُضيفت صلاحيات جديدة: `roles.create/update/delete/permissions.manage` · `settings.view/manage`.
+- ✅ **Authorization** — كل endpoint محميّ بـ `[HasPermission("resource.action")]`؛ عزل المستأجر يضمن أن كيانات مستأجر آخر غير مرئية (NOT_FOUND).
+- ✅ **اختبارات (23 جديدة، 36/36 إجمالاً):** happy-path لكل مجموعة · عزل المستأجرين (users من مستأجر آخر → 404) · authorization (بلا صلاحية → 403 · بلا مصادقة → 401) · validation (بريد/كلمة مرور/عملة/صلاحية غير صالحة → 400) · تدوير كلمة المرور تعمل بالجديدة · حماية الدور النظامي.
+
+> **لم يُنشأ بعد:** Products/Sales/Inventory · Business modules · Frontend.
 
 ---
 
@@ -93,8 +110,8 @@ SmartApp.sln
 ├── src/
 │   ├── SmartApp.Domain          ← قلب النظام (لا يعتمد إلا على Shared)
 │   ├── SmartApp.Application      ← حالات الاستخدام (CQRS/MediatR + FluentValidation + الواجهات)
-│   ├── SmartApp.Infrastructure   ← الخدمات التقنية (JWT, TenantProvider, ...) — لاحقاً
-│   ├── SmartApp.Persistence      ← الوصول للبيانات (EF Core + SQL Server) — لاحقاً
+│   ├── SmartApp.Infrastructure   ← الخدمات التقنية (JWT, PasswordHasher, TenantProvider)
+│   ├── SmartApp.Persistence      ← الوصول للبيانات (EF Core + SQL Server + Seeding)
 │   ├── SmartApp.Shared           ← عناصر محايدة مشتركة (Result, Constants, ...)
 │   └── SmartApp.API              ← نقطة الدخول (Composition Root + Middleware + Swagger)
 │
@@ -127,7 +144,9 @@ API (Composition Root) → كل المشاريع
 | API | ASP.NET Core 9 Web API |
 | CQRS | MediatR 12.4.1 |
 | Validation | FluentValidation 11.11 |
-| ORM (لاحقاً) | EF Core 9 + SQL Server |
+| ORM | EF Core 9 + SQL Server (SQLite in-memory للاختبارات) |
+| Auth | JWT Bearer + Permission-based Authorization (`resource.action`) |
+| Passwords | PBKDF2 (ASP.NET Core `PasswordHasher`) |
 | Versioning | Asp.Versioning (URL segment: `/api/v1/`) |
 | Docs | Swagger / Swashbuckle 7.2 (JWT Bearer) |
 
@@ -163,9 +182,9 @@ dotnet run --project src/SmartApp.API
 
 ---
 
-## المرحلة التالية (Next: Phase 2)
+## المرحلة التالية (Next: Business Modules)
 
-**Tenancy + العزل (Multi-Tenant Core):** كيان `Tenant` + `AppDbContext` + Global Query Filter + `TenantResolutionMiddleware` + **اختبارات العزل الإلزامية**. التفاصيل في [14-Implementation-Roadmap.md](../SmartApp-Architecture/14-Implementation-Roadmap.md).
+**أول Business Module** (مثل Products/Catalog) فوق الأساس الجاهز: Domain entities + configs + migration + CQRS endpoints + tests — بنفس قوالب العزل والتحقّق والصلاحيات. التفاصيل في [14-Implementation-Roadmap.md](../SmartApp-Architecture/14-Implementation-Roadmap.md).
 
 ---
 
@@ -175,4 +194,4 @@ dotnet run --project src/SmartApp.API
 
 ---
 
-_SmartApp · Phase 1 (Foundation) · بُني على .NET 9 · Clean Architecture._
+_SmartApp · Phase 1–6 (Foundation → Administration) · بُني على .NET 9 · Clean Architecture._

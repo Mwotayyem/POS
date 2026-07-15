@@ -54,8 +54,11 @@ generated_code = true
 dotnet_analyzer_diagnostic.severity = none
 
 # ===== Test projects — allow underscores in test method names (Given_When_Then) =====
+# CA1861: inline constant arrays are idiomatic test data (assertions / request bodies); the
+# micro-optimization to static readonly fields adds noise without value in tests.
 [tests/**/*.cs]
 dotnet_diagnostic.CA1707.severity = none
+dotnet_diagnostic.CA1861.severity = none
 
 # ===== CA1716: 'Shared' namespace is intentional (project name); C#-only solution =====
 [*.cs]

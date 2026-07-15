@@ -27,6 +27,12 @@ builder.Services
 var app = builder.Build();
 
 // ---------------------------------------------------------------------------
+// Seed the global permission catalog (idempotent). Non-fatal: an unavailable/unmigrated database
+// is logged and does not prevent startup (handled inside the extension).
+// ---------------------------------------------------------------------------
+await app.SeedPermissionCatalogAsync();
+
+// ---------------------------------------------------------------------------
 // Middleware pipeline — order is load-bearing.
 // (See SmartApp-Architecture/02-Solution-Architecture.md §5 and 03-Project-Structure.md §7)
 // ---------------------------------------------------------------------------
