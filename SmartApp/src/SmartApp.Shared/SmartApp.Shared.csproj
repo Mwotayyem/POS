@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Shared: عناصر محايدة مشتركة — لا يعتمد على أي مشروع أو حزمة -->
+
+</Project>

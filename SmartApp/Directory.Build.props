@@ -1,0 +1,23 @@
+<Project>
+
+  <!-- إعدادات موحّدة لكل مشاريع SmartApp — تلتزم بـ SmartApp-Architecture/13-Development-Rules.md -->
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+
+    <!-- جودة: لا تحذيرات مُقدَّمة (Definition of Done) -->
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <AnalysisLevel>latest-recommended</AnalysisLevel>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+
+    <!-- بيانات عامّة -->
+    <Company>SmartApp</Company>
+    <Product>SmartApp</Product>
+    <Authors>SmartApp Team</Authors>
+    <NeutralLanguage>ar</NeutralLanguage>
+  </PropertyGroup>
+
+</Project>

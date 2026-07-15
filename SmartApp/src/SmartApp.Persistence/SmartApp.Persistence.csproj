@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Persistence: الوصول للبيانات (EF Core + SQL Server) — DbContext لاحقاً في Phase 2 -->
+  <ItemGroup>
+    <ProjectReference Include="..\SmartApp.Application\SmartApp.Application.csproj" />
+    <ProjectReference Include="..\SmartApp.Domain\SmartApp.Domain.csproj" />
+    <ProjectReference Include="..\SmartApp.Shared\SmartApp.Shared.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.0" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Domain: قلب النظام — لا يعتمد إلا على Shared (لا حزم خارجية) -->
+  <ItemGroup>
+    <ProjectReference Include="..\SmartApp.Shared\SmartApp.Shared.csproj" />
+  </ItemGroup>
+
+</Project>
