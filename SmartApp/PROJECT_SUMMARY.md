@@ -50,8 +50,8 @@ layer). Composite uniqueness = filtered unique index including `TenantId`, `WHER
 | 9 | Purchasing (Suppliers, Purchase Orders/Invoices/Returns, document numbering) | ✅ |
 | 10 | Sales (Customers, Sales Invoices, Payments, Returns, cost-of-sale snapshot) | ✅ |
 | 11 | Dashboard & Reports API (summary, sales/low-stock/product reports) | ✅ |
-| 12 | **Production Readiness** (health check, CORS, rate limiting, SECURITY/DEPLOYMENT docs) | ✅ |
-| 13 | Frontend Application | ⏳ next |
+| 12 | Production Readiness (health check, CORS, rate limiting, SECURITY/DEPLOYMENT docs) | ✅ |
+| 13 | **Frontend Application** (React + Vite + TypeScript SPA) | ✅ |
 
 ---
 
@@ -125,12 +125,35 @@ tenant-isolation review in [`SECURITY.md`](SECURITY.md); config/migrations/backu
 
 ---
 
+## Frontend (Phase 13)
+
+A **React + Vite + TypeScript** single-page app in [`frontend/`](frontend/README.md) consumes the
+API. Chosen for the cleanest fit with a JWT REST backend, the largest ecosystem/maintainability, and
+type safety mirroring the backend DTOs.
+
+- **Auth:** login; JWT access+refresh with a single-flight **refresh-on-401** interceptor; logout;
+  session restored from `/profile`.
+- **Authorization:** sidebar menu and in-page actions **filtered by the user's permissions**,
+  mirroring the backend `[HasPermission]` policies.
+- **Layout:** responsive sidebar + header + user menu; RTL Arabic; light/dark theme.
+- **18 pages:** Dashboard, Reports, Profile; Administration (Users, Roles + permission assignment,
+  Permissions, Tenant Settings); Catalog (Products, Categories, Units, Brands); Inventory
+  (Warehouses, Stock); Purchasing (Suppliers, Purchase Invoices); Sales (Customers, Sales Invoices).
+- **Quality:** clean structure (components / typed API clients / hooks); unified error handling;
+  loading states; reusable data table + modal; **`npm run build` passes** (strict `tsc` + Vite,
+  0 errors, 112 modules).
+
+---
+
 ## How to run
 
 ```bash
+# Backend
 dotnet build SmartApp.sln
-dotnet run --project src/SmartApp.API
-# Swagger: http://localhost:<port>/swagger
+dotnet run --project src/SmartApp.API      # Swagger: http://localhost:<port>/swagger
+
+# Frontend (separate terminal)
+cd frontend && npm install && npm run dev  # http://localhost:5173 (proxies /api to the backend)
 ```
 
 SQL Server connection string and JWT signing key come from user-secrets / environment variables

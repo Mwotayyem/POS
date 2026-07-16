@@ -2,7 +2,22 @@
 
 > **Solution فعلية** مبنية على **Clean Architecture** و **.NET 9**، متعدّدة المستأجرين (Multi-Tenant) بعزل تامّ للبيانات وإدارة تفعيل يدوية للعملاء — **بلا اشتراكات ولا فوترة ولا مدفوعات**.
 
-**الحالة:** ✅ Phase 1–12 مكتملة (Backend كامل). Foundation → … → Reports → **Production Readiness**. **116/116 اختبار تمرّ** · مراجعة أمنية + تحصين إنتاجي + وثائق نشر. جاهز لـ Phase 13 (Frontend).
+**الحالة:** ✅ **المشروع مكتمل (Phase 1–13).** Backend كامل (12 مرحلة، **116/116 اختبار**) + **Frontend حقيقي** (React + Vite + TypeScript). حلّ متكامل يفتح في Visual Studio وجاهز للتشغيل.
+
+---
+
+## ما أُنجز في Phase 13 (Frontend Application)
+
+واجهة أمامية احترافية (**ليست Demo**) في [`frontend/`](frontend/README.md)، تتّصل بالـ API الموجود.
+
+- ✅ **التقنية المختارة: React + Vite + TypeScript (SPA).** لماذا؟ أفضل ملاءمة لـ REST API مع JWT (فصل معماري نظيف)، أكبر نظام بيئي وصيانة طويلة الأمد، وأمان أنواع يطابق صرامة الـ backend (الـ envelope والـ DTOs كأنواع).
+- ✅ **المصادقة:** صفحة تسجيل دخول · JWT (access + refresh) · **refresh تلقائي عند 401** (طلب واحد مشترك ثم إعادة المحاولة) · تسجيل خروج · استعادة الجلسة من `/profile` عند إعادة التحميل.
+- ✅ **التخويل:** القائمة الجانبية وإجراءات الصفحات **مُفلترة حسب صلاحيات المستخدم** (من `/profile`)، مطابقةً لسياسات `[HasPermission]` في الـ backend.
+- ✅ **التخطيط:** Sidebar + Header + User menu · قائمة ديناميكية · تصميم متجاوب · RTL عربي · ثيم فاتح/داكن.
+- ✅ **الصفحات (18):** لوحة معلومات · تقارير · ملف شخصي · الإدارة (المستخدمون/الأدوار مع إسناد الصلاحيات/الصلاحيات/إعدادات المستأجر) · الكتالوج (المنتجات/التصنيفات/الوحدات/العلامات) · المخزون (المستودعات/الأرصدة) · المشتريات (المورّدون/الفواتير) · المبيعات (العملاء/الفواتير).
+- ✅ **الجودة:** بنية نظيفة (components/services/typed API clients/hooks) · معالجة أخطاء موحّدة (من `error.code`) · حالات تحميل · جدول بيانات ونافذة منبثقة قابلان لإعادة الاستخدام · **بناء ناجح** (`tsc` صارم + `vite`) بلا أخطاء (112 module).
+
+> **المشروع مكتمل:** Backend (Phases 1–12) + Frontend (Phase 13).
 
 ---
 
@@ -281,9 +296,20 @@ dotnet run --project src/SmartApp.API
 
 ---
 
-## المرحلة التالية (Next: Phase 13 — Frontend)
+## تشغيل الحلّ الكامل (Backend + Frontend)
 
-**Frontend Application:** واجهة حقيقية تتّصل بالـ API — مصادقة (تسجيل دخول + refresh + خروج + المستخدم الحالي) · تخطيط (Sidebar/Header/User menu) · قائمة ديناميكية حسب الصلاحيات · صفحات لكل الوحدات (Administration/Catalog/Inventory/Purchasing/Sales/Reports). سيتمّ اختيار التقنية وتبريرها. أساس احترافي (لا Demo).
+```bash
+# 1) Backend API
+cd SmartApp
+dotnet run --project src/SmartApp.API      # Swagger على /swagger (تطوير)
+
+# 2) Frontend (في نافذة أخرى)
+cd SmartApp/frontend
+npm install
+npm run dev                                 # http://localhost:5173 (يمرّر /api للـ backend)
+```
+
+الأسرار (`Jwt:SigningKey` + `ConnectionStrings:SmartAppDb`) من متغيّرات البيئة / user-secrets. تفاصيل النشر في [DEPLOYMENT.md](DEPLOYMENT.md) والأمن في [SECURITY.md](SECURITY.md). تفاصيل الواجهة في [frontend/README.md](frontend/README.md).
 
 ---
 
@@ -293,4 +319,4 @@ dotnet run --project src/SmartApp.API
 
 ---
 
-_SmartApp · Phase 1–12 (Backend كامل) · بُني على .NET 9 · Clean Architecture._
+_SmartApp · Phase 1–13 (Backend + Frontend مكتمل) · .NET 9 · Clean Architecture · React + Vite + TypeScript._
