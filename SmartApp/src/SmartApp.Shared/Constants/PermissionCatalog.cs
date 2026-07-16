@@ -82,6 +82,19 @@ public static class PermissionCatalog
         new(Permissions.Purchases.Delete, "purchasing", "حذف مستند شراء"),
         new(Permissions.Purchases.Post, "purchasing", "ترحيل/استلام مستند شراء"),
 
+        // ---- Sales: Customers ----
+        new(Permissions.Customers.View, "sales", "عرض العملاء"),
+        new(Permissions.Customers.Create, "sales", "إنشاء عميل"),
+        new(Permissions.Customers.Update, "sales", "تعديل عميل"),
+        new(Permissions.Customers.Delete, "sales", "حذف عميل"),
+
+        // ---- Sales: Invoices / Payments / Returns ----
+        new(Permissions.Sales.View, "sales", "عرض المبيعات"),
+        new(Permissions.Sales.Create, "sales", "إنشاء فاتورة مبيعات"),
+        new(Permissions.Sales.Update, "sales", "تعديل مستند مبيعات"),
+        new(Permissions.Sales.Delete, "sales", "حذف مستند مبيعات"),
+        new(Permissions.Sales.Post, "sales", "دفعات/مرتجعات المبيعات"),
+
         // ---- System (owner only) ----
         new(Permissions.System.ManageTenants, "system", "إدارة المستأجرين"),
     ];

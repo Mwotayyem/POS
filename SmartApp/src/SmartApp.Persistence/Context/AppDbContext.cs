@@ -6,6 +6,7 @@ using SmartApp.Domain.Common;
 using SmartApp.Domain.Identity;
 using SmartApp.Domain.Inventory;
 using SmartApp.Domain.Purchasing;
+using SmartApp.Domain.Sales;
 using SmartApp.Domain.Sequences;
 using SmartApp.Domain.Tenancy;
 
@@ -74,6 +75,14 @@ public sealed class AppDbContext : DbContext, IApplicationDbContext
     public DbSet<PurchaseInvoiceItem> PurchaseInvoiceItems => Set<PurchaseInvoiceItem>();
     public DbSet<PurchaseReturn> PurchaseReturns => Set<PurchaseReturn>();
     public DbSet<PurchaseReturnItem> PurchaseReturnItems => Set<PurchaseReturnItem>();
+
+    // ---- Sales DbSets (Phase 10) ----
+    public DbSet<Customer> Customers => Set<Customer>();
+    public DbSet<SalesInvoice> SalesInvoices => Set<SalesInvoice>();
+    public DbSet<SalesInvoiceItem> SalesInvoiceItems => Set<SalesInvoiceItem>();
+    public DbSet<Payment> Payments => Set<Payment>();
+    public DbSet<SalesReturn> SalesReturns => Set<SalesReturn>();
+    public DbSet<SalesReturnItem> SalesReturnItems => Set<SalesReturnItem>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

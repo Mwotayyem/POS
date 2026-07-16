@@ -111,6 +111,27 @@ public static class Permissions
         public const string Post = "purchasing.post";
     }
 
+    // ---- Sales module (Phase 10) ----
+
+    public static class Customers
+    {
+        public const string View = "sales.customers.view";
+        public const string Create = "sales.customers.create";
+        public const string Update = "sales.customers.update";
+        public const string Delete = "sales.customers.delete";
+    }
+
+    public static class Sales
+    {
+        public const string View = "sales.view";
+        public const string Create = "sales.create";
+        public const string Update = "sales.update";
+        public const string Delete = "sales.delete";
+
+        /// <summary>Post a sale / record a payment / process a return (affects inventory or balances).</summary>
+        public const string Post = "sales.post";
+    }
+
     public static class System
     {
         /// <summary>System-owner only — manage tenants (create/activate/suspend/disable).</summary>

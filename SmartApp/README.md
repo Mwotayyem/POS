@@ -2,7 +2,23 @@
 
 > **Solution فعلية** مبنية على **Clean Architecture** و **.NET 9**، متعدّدة المستأجرين (Multi-Tenant) بعزل تامّ للبيانات وإدارة تفعيل يدوية للعملاء — **بلا اشتراكات ولا فوترة ولا مدفوعات**.
 
-**الحالة:** ✅ Phase 1–9 مكتملة. Foundation → Administration → Catalog → Inventory → **Purchasing (Suppliers/Orders/Invoices/Returns)**. **95/95 اختبار تمرّ** · فاتورة الشراء تُدخِل المخزون بتكلفة WAC وتحدّث رصيد المورّد ذرّياً.
+**الحالة:** ✅ Phase 1–10 مكتملة. Foundation → Administration → Catalog → Inventory → Purchasing → **Sales (Customers/Invoices/Payments/Returns)**. **108/108 اختبار تمرّ** · دورة شراء وبيع كاملة تحرّك المخزون والأرصدة ذرّياً.
+
+---
+
+## ما أُنجز في Phase 10 (Sales Module)
+
+وحدة المبيعات — الوجه المقابل للمشتريات. مبنية مطابقةً لـ [06-Tables-Definitions.md §5–§6](../SmartApp-Architecture/06-Tables-Definitions.md).
+
+- ✅ **6 كيانات:** `Customer` (رصيد A/R + CreditLimit)، `SalesInvoice`+Items (**UnitPrice سعر البيع + UnitCost لقطة WAC وقت البيع** للربحية، CustomerId اختياري لبيع نقدي، ReturnedQty بقيد CHECK)، `Payment` (دفعة عميل: Cash/Transfer/Card)، `SalesReturn`+Items.
+- ✅ **فاتورة البيع (create = معاملة واحدة):** ترقيم + الفاتورة + البنود + **لقطة تكلفة WAC لكل بند** + حركة مخزون OUT عبر `IStockLedger` (يرفض البيع إن لم يكفِ المخزون) + **رفع رصيد العميل** (بالمبلغ غير المدفوع). حساب المجاميع.
+- ✅ **الدفعات:** تسجيل دفعة عميل → تخفيض رصيده، وإن رُبطت بفاتورة تُحدّث `PaidAmount`.
+- ✅ **مرتجع البيع:** يتحقّق من المتبقّي القابل للإرجاع (منع الزائد)، حركة مخزون IN (إعادة للمخزون بالتكلفة الأصلية)، **تخفيض رصيد العميل**، تحديث ReturnedQty وحالة الفاتورة.
+- ✅ **API:** `/api/v1/customers` · `/sales-invoices` (+`/{id}/returns`) · `/payments`، محميّة بـ `[HasPermission("sales.*")]`.
+- ✅ **Migration `AddSales`** — 6 جداول بكل الفهارس والقيود. **بلا model drift**.
+- ✅ **اختبارات (13 جديدة، 108/108 إجمالاً):** Customer CRUD · البيع يخفّض المخزون + يرفع A/R + يلتقط التكلفة · رفض البيع فوق المتاح · دفعة جزئية تضيف غير المدفوع · دفعة تخفّض الرصيد وتحدّث PaidAmount · مرتجع يعيد للمخزون ويخفّض الرصيد ويحدّث الحالة · منع الإرجاع الزائد · بيع نقدي بلا عميل · عزل المستأجر · authorization.
+
+> **لم يُنشأ بعد:** Reports/Dashboard · Frontend.
 
 ---
 
@@ -233,9 +249,9 @@ dotnet run --project src/SmartApp.API
 
 ---
 
-## المرحلة التالية (Next: Phase 10 — Sales)
+## المرحلة التالية (Next: Phase 11 — Dashboard & Reports API)
 
-**Sales Module:** Customers + Sales Invoices (بنود + خصومات + ضرائب + مجاميع) + Payments (طرق متعددة) + Sales Returns. عند البيع → حركة مخزون OUT عبر `IStockLedger` + تحديث الرصيد. التفاصيل في [14-Implementation-Roadmap.md](../SmartApp-Architecture/14-Implementation-Roadmap.md).
+**Dashboard & Reports:** ملخّص المبيعات + ملخّص المشتريات + ملخّص الأرباح (بناءً على UnitPrice−UnitCost) + المخزون المنخفض (تحت ReorderLevel). تقارير المبيعات/المخزون/المنتجات. التفاصيل في [14-Implementation-Roadmap.md](../SmartApp-Architecture/14-Implementation-Roadmap.md).
 
 ---
 
@@ -245,4 +261,4 @@ dotnet run --project src/SmartApp.API
 
 ---
 
-_SmartApp · Phase 1–9 (Foundation → Purchasing) · بُني على .NET 9 · Clean Architecture._
+_SmartApp · Phase 1–10 (Foundation → Sales) · بُني على .NET 9 · Clean Architecture._

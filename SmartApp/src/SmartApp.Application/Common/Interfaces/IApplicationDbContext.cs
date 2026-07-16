@@ -3,6 +3,7 @@ using SmartApp.Domain.Catalog;
 using SmartApp.Domain.Identity;
 using SmartApp.Domain.Inventory;
 using SmartApp.Domain.Purchasing;
+using SmartApp.Domain.Sales;
 using SmartApp.Domain.Sequences;
 using SmartApp.Domain.Tenancy;
 
@@ -54,6 +55,14 @@ public interface IApplicationDbContext
     DbSet<PurchaseInvoiceItem> PurchaseInvoiceItems { get; }
     DbSet<PurchaseReturn> PurchaseReturns { get; }
     DbSet<PurchaseReturnItem> PurchaseReturnItems { get; }
+
+    // ---- Sales ----
+    DbSet<Customer> Customers { get; }
+    DbSet<SalesInvoice> SalesInvoices { get; }
+    DbSet<SalesInvoiceItem> SalesInvoiceItems { get; }
+    DbSet<Payment> Payments { get; }
+    DbSet<SalesReturn> SalesReturns { get; }
+    DbSet<SalesReturnItem> SalesReturnItems { get; }
 
     /// <summary>
     /// Persists pending changes. Tenant stamping, soft-delete conversion, and audit-field
