@@ -46,9 +46,9 @@ layer). Composite uniqueness = filtered unique index including `TenantId`, `WHER
 | 5 | API + Authentication (envelope, login/refresh/logout, permission authorization) | ✅ |
 | 6 | Administration (Users, Roles, Permissions, Tenant Settings, Profile + seeding) | ✅ |
 | 7 | Catalog (Categories, Units, Brands, Products, ProductUnits, Barcodes, Prices) | ✅ |
-| 8 | **Inventory** (Warehouses, Stock, StockMovements append-only, Adjustments, Transfers, WAC) | ✅ |
-| 9 | Purchasing (Suppliers, Purchase Orders/Invoices/Returns) | ⏳ next |
-| 10 | Sales (Customers, Sales Invoices, Payments, Returns) | ⏳ |
+| 8 | Inventory (Warehouses, Stock, StockMovements append-only, Adjustments, Transfers, WAC) | ✅ |
+| 9 | **Purchasing** (Suppliers, Purchase Orders/Invoices/Returns, document numbering) | ✅ |
+| 10 | Sales (Customers, Sales Invoices, Payments, Returns) | ⏳ next |
 | 11 | Dashboard & Reports API | ⏳ |
 | 12 | Production Readiness (security/perf review, deployment config) | ⏳ |
 | 13 | Frontend Application | ⏳ |
@@ -62,8 +62,17 @@ layer). Composite uniqueness = filtered unique index including `TenantId`, `WHER
 **Catalog:** `Categories` (tree), `Units`, `Brands`, `Products`, `ProductUnits`, `ProductBarcodes`,
 `ProductPrices`
 **Inventory:** `Warehouses`, `Stocks` (per product+warehouse), `StockMovements` (append-only)
+**Purchasing:** `Suppliers`, `PurchaseOrders`(+Items), `PurchaseInvoices`(+Items), `PurchaseReturns`(+Items)
+**Sequences:** `DocumentSequences` (per-tenant document numbering)
 
-**Migrations:** `InitialCreate` → `AddIdentity` → `AddCatalog` → `AddInventory` (no model drift).
+**Migrations:** `InitialCreate` → `AddIdentity` → `AddCatalog` → `AddInventory` → `AddPurchasing`
+(no model drift).
+
+**Purchasing notes:** creating a purchase invoice is one atomic transaction — number + invoice +
+items + inbound stock (via `IStockLedger`, WAC recompute) + supplier balance. A purchase return
+reverses stock and balance and guards against over-return (ReturnedQty ≤ Quantity). Purchase orders
+(Draft→Confirmed→Received→Cancelled) are a greenfield addition (not in the docs). Document numbers
+come from `IDocumentNumberService` (atomic per-tenant sequence).
 
 **Inventory notes:** stock changes flow through `IStockLedger`, which recomputes weighted-average
 cost (inbound), records an append-only movement, and keeps `Product.CostPrice` in sync. Append-only
@@ -80,17 +89,21 @@ architecture docs' Tenant-only / one-row-per-product model (per explicit Phase 8
   `/permissions`, `/tenant/settings`, `/profile` (+ change-password)
 - **Catalog:** `/categories`, `/units`, `/brands`, `/products` (search + category/brand filters)
 - **Inventory:** `/warehouses`, `/stock/balances`, `/stock/movements`, `/stock/adjust`, `/stock/transfer`
+- **Purchasing:** `/suppliers`, `/purchase-orders` (+confirm/cancel), `/purchase-invoices`
+  (+`/{id}/returns`)
 
-Every non-auth, non-profile endpoint is guarded by a `catalog.*` / `inventory.*` / `users.*` /
-`roles.*` / `settings.*` permission. The Owner role (seeded per tenant) holds every permission.
+Every non-auth, non-profile endpoint is guarded by a `catalog.*` / `inventory.*` / `purchasing.*` /
+`users.*` / `roles.*` / `settings.*` permission. The Owner role (seeded per tenant) holds every
+permission.
 
 ---
 
 ## Quality gate
 
 - **Build:** 0 warnings / 0 errors (warnings-as-errors).
-- **Tests:** 80 integration tests passing (auth, administration, catalog, inventory) — CRUD, tenant
-  isolation, authorization, validation, plus WAC math and append-only enforcement for inventory.
+- **Tests:** 95 integration tests passing (auth, administration, catalog, inventory, purchasing) —
+  CRUD, tenant isolation, authorization, validation, plus WAC math, append-only enforcement, and the
+  atomic purchase-invoice → stock/balance flow.
 - **Migrations:** verified, no pending model changes.
 
 ---

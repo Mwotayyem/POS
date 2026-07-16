@@ -69,6 +69,19 @@ public static class PermissionCatalog
         new(Permissions.Stock.Adjust, "inventory", "تسوية المخزون"),
         new(Permissions.Stock.Transfer, "inventory", "تحويل المخزون بين المستودعات"),
 
+        // ---- Purchasing: Suppliers ----
+        new(Permissions.Suppliers.View, "purchasing", "عرض المورّدين"),
+        new(Permissions.Suppliers.Create, "purchasing", "إنشاء مورّد"),
+        new(Permissions.Suppliers.Update, "purchasing", "تعديل مورّد"),
+        new(Permissions.Suppliers.Delete, "purchasing", "حذف مورّد"),
+
+        // ---- Purchasing: Orders / Invoices / Returns ----
+        new(Permissions.Purchases.View, "purchasing", "عرض المشتريات"),
+        new(Permissions.Purchases.Create, "purchasing", "إنشاء مستند شراء"),
+        new(Permissions.Purchases.Update, "purchasing", "تعديل مستند شراء"),
+        new(Permissions.Purchases.Delete, "purchasing", "حذف مستند شراء"),
+        new(Permissions.Purchases.Post, "purchasing", "ترحيل/استلام مستند شراء"),
+
         // ---- System (owner only) ----
         new(Permissions.System.ManageTenants, "system", "إدارة المستأجرين"),
     ];

@@ -2,7 +2,25 @@
 
 > **Solution فعلية** مبنية على **Clean Architecture** و **.NET 9**، متعدّدة المستأجرين (Multi-Tenant) بعزل تامّ للبيانات وإدارة تفعيل يدوية للعملاء — **بلا اشتراكات ولا فوترة ولا مدفوعات**.
 
-**الحالة:** ✅ Phase 1–8 مكتملة. Foundation + Tenant + Identity/RBAC + API/Auth + Administration + Catalog + **Inventory (Warehouses/Stock/Movements/Adjustments/Transfers)**. **80/80 اختبار تمرّ** · مخزون بتكلفة WAC وسجلّ حركات append-only.
+**الحالة:** ✅ Phase 1–9 مكتملة. Foundation → Administration → Catalog → Inventory → **Purchasing (Suppliers/Orders/Invoices/Returns)**. **95/95 اختبار تمرّ** · فاتورة الشراء تُدخِل المخزون بتكلفة WAC وتحدّث رصيد المورّد ذرّياً.
+
+---
+
+## ما أُنجز في Phase 9 (Purchasing Module)
+
+وحدة المشتريات فوق الكتالوج والمخزون. مبنية مطابقةً لـ [06-Tables-Definitions.md §5–§7](../SmartApp-Architecture/06-Tables-Definitions.md) حيث تُعرَّف، مع توسعات موثّقة (Purchase Orders غير موجودة في الوثائق).
+
+- ✅ **7 كيانات:** `Supplier` (رصيد A/P)، `PurchaseOrder`+Items (workflow: Draft→Confirmed→Received→Cancelled — greenfield)، `PurchaseInvoice`+Items (SupplierId، UnitPrice=التكلفة، ReturnedQty بقيد CHECK)، `PurchaseReturn`+Items. + كيان `DocumentSequence` لترقيم المستندات (per-tenant).
+- ✅ **`IStockLedger` هو المدخل الوحيد للمخزون** — فاتورة الشراء تستدعيه لكل بند (وارد → WAC) بدل لمس جداول المخزون مباشرةً، مطابقةً لقاعدة حدود الوحدات في [04-Domain-Boundaries.md §2.4](../SmartApp-Architecture/04-Domain-Boundaries.md).
+- ✅ **`IDocumentNumberService`** — ترقيم تسلسلي ذرّي داخل معاملة المستند (PO-/PINV-/PRET-...).
+- ✅ **فاتورة الشراء (create = معاملة واحدة):** ترقيم + الفاتورة + البنود + حركة مخزون IN لكل بند + تحديث WAC + `Product.CostPrice` + **رصيد المورّد** (يزيد بالمبلغ غير المدفوع). حساب المجاميع (subtotal/discount/tax/grand).
+- ✅ **مرتجع الشراء:** يتحقّق أن الكمية ≤ المتبقّي (منع الإرجاع الزائد)، حركة مخزون OUT، **يخفّض رصيد المورّد**، يزيد ReturnedQty، ويحدّث حالة الفاتورة (Partially/FullyReturned).
+- ✅ **أمر الشراء:** CRUD + confirm/cancel، وربطه بالفاتورة عند الاستلام (Received). لا يمسّ المخزون.
+- ✅ **API:** `/api/v1/suppliers` · `/purchase-orders` (+confirm/cancel) · `/purchase-invoices` (+`/{id}/returns`)، محميّة بـ `[HasPermission("purchasing.*")]`.
+- ✅ **Migration `AddPurchasing`** — 8 جداول (7 مشتريات + DocumentSequences) بكل الفهارس والقيود. **بلا model drift**.
+- ✅ **اختبارات (15 جديدة، 95/95 إجمالاً):** Supplier CRUD · فاتورة تُدخِل المخزون + WAC + رصيد المورّد + Product.CostPrice · WAC عند شراء ثانٍ · دفعة جزئية تضيف غير المدفوع فقط · مرتجع يعكس المخزون والرصيد والحالة · منع الإرجاع الزائد · workflow أمر الشراء (confirm/cancel/منع تأكيد الملغى) · فاتورة من أمر تجعله Received · عزل المستأجر · authorization.
+
+> **لم يُنشأ بعد:** Sales · Reports · Frontend.
 
 ---
 
@@ -215,9 +233,9 @@ dotnet run --project src/SmartApp.API
 
 ---
 
-## المرحلة التالية (Next: Phase 9 — Purchasing)
+## المرحلة التالية (Next: Phase 10 — Sales)
 
-**Purchasing Module:** Suppliers + Purchase Orders (status workflow) + Purchase Invoices (بنود + مجاميع) + Purchase Returns. عند استلام فاتورة شراء → حركة مخزون IN عبر `IStockLedger` + تحديث الرصيد و WAC. التفاصيل في [14-Implementation-Roadmap.md](../SmartApp-Architecture/14-Implementation-Roadmap.md).
+**Sales Module:** Customers + Sales Invoices (بنود + خصومات + ضرائب + مجاميع) + Payments (طرق متعددة) + Sales Returns. عند البيع → حركة مخزون OUT عبر `IStockLedger` + تحديث الرصيد. التفاصيل في [14-Implementation-Roadmap.md](../SmartApp-Architecture/14-Implementation-Roadmap.md).
 
 ---
 
@@ -227,4 +245,4 @@ dotnet run --project src/SmartApp.API
 
 ---
 
-_SmartApp · Phase 1–8 (Foundation → Inventory) · بُني على .NET 9 · Clean Architecture._
+_SmartApp · Phase 1–9 (Foundation → Purchasing) · بُني على .NET 9 · Clean Architecture._

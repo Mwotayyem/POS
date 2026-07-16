@@ -2,6 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using SmartApp.Domain.Catalog;
 using SmartApp.Domain.Identity;
 using SmartApp.Domain.Inventory;
+using SmartApp.Domain.Purchasing;
+using SmartApp.Domain.Sequences;
 using SmartApp.Domain.Tenancy;
 
 namespace SmartApp.Application.Common.Interfaces;
@@ -40,6 +42,18 @@ public interface IApplicationDbContext
     DbSet<Warehouse> Warehouses { get; }
     DbSet<Stock> Stocks { get; }
     DbSet<StockMovement> StockMovements { get; }
+
+    // ---- Sequences ----
+    DbSet<DocumentSequence> DocumentSequences { get; }
+
+    // ---- Purchasing ----
+    DbSet<Supplier> Suppliers { get; }
+    DbSet<PurchaseOrder> PurchaseOrders { get; }
+    DbSet<PurchaseOrderItem> PurchaseOrderItems { get; }
+    DbSet<PurchaseInvoice> PurchaseInvoices { get; }
+    DbSet<PurchaseInvoiceItem> PurchaseInvoiceItems { get; }
+    DbSet<PurchaseReturn> PurchaseReturns { get; }
+    DbSet<PurchaseReturnItem> PurchaseReturnItems { get; }
 
     /// <summary>
     /// Persists pending changes. Tenant stamping, soft-delete conversion, and audit-field

@@ -90,6 +90,27 @@ public static class Permissions
         public const string Transfer = "inventory.stock.transfer";
     }
 
+    // ---- Purchasing module (Phase 9) ----
+
+    public static class Suppliers
+    {
+        public const string View = "purchasing.suppliers.view";
+        public const string Create = "purchasing.suppliers.create";
+        public const string Update = "purchasing.suppliers.update";
+        public const string Delete = "purchasing.suppliers.delete";
+    }
+
+    public static class Purchases
+    {
+        public const string View = "purchasing.view";
+        public const string Create = "purchasing.create";
+        public const string Update = "purchasing.update";
+        public const string Delete = "purchasing.delete";
+
+        /// <summary>Post/receive a purchase document (affects inventory).</summary>
+        public const string Post = "purchasing.post";
+    }
+
     public static class System
     {
         /// <summary>System-owner only — manage tenants (create/activate/suspend/disable).</summary>

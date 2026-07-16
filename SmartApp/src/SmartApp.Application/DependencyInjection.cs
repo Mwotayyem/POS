@@ -4,6 +4,7 @@ using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using SmartApp.Application.Common.Behaviors;
 using SmartApp.Application.Common.Interfaces;
+using SmartApp.Application.Common.Services;
 using SmartApp.Application.Inventory.Services;
 
 namespace SmartApp.Application;
@@ -31,6 +32,9 @@ public static class DependencyInjection
         // Inventory: the stock ledger (WAC + append-only movements) is the single entry point for
         // stock changes, shared by adjustments/transfers now and Sales/Purchases later.
         services.AddScoped<IStockLedger, StockLedger>();
+
+        // Document numbering (per-tenant sequential numbers for purchase/sales documents).
+        services.AddScoped<IDocumentNumberService, DocumentNumberService>();
 
         // NOTE (later): AutoMapper profiles registered here once a mapping library is finalized.
 
