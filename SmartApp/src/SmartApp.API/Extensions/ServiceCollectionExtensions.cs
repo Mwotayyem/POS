@@ -9,7 +9,7 @@ namespace SmartApp.API.Extensions;
 /// </summary>
 public static class ServiceCollectionExtensions
 {
-    public static IServiceCollection AddApiServices(this IServiceCollection services)
+    public static IServiceCollection AddApiServices(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddControllers();
 
@@ -22,8 +22,9 @@ public static class ServiceCollectionExtensions
         services.AddSwaggerConfig();
         services.AddJwtAuthentication();
 
-        // NOTE (later): CORS whitelist + rate limiting are configured here.
+        // Production hardening (Phase 12): health checks, CORS whitelist, rate limiting.
         // See SmartApp-Architecture/11-Security-Architecture.md.
+        services.AddProductionServices(configuration);
 
         return services;
     }

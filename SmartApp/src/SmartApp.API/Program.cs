@@ -22,7 +22,7 @@ builder.Services
     .AddApplication()
     .AddInfrastructure(builder.Configuration)
     .AddPersistence(builder.Configuration)
-    .AddApiServices();
+    .AddApiServices(builder.Configuration);
 
 var app = builder.Build();
 
@@ -49,7 +49,16 @@ if (!app.Environment.IsProduction())
 
 app.UseHttpsRedirection();
 
-// 3) AuthN -> TenantResolution -> AuthZ.
+// 3) CORS (whitelist from configuration) before auth.
+app.UseCors(ProductionExtensions.CorsPolicyName);
+
+// 4) Rate limiting — opt-in via RateLimiting:Enabled (off for tests/dev).
+if (app.Configuration.IsRateLimitingEnabled())
+{
+    app.UseRateLimiter();
+}
+
+// 5) AuthN -> TenantResolution -> AuthZ.
 // TenantResolution runs after authentication so it can read the tenant claim, and before
 // authorization so an inactive tenant is rejected early.
 app.UseAuthentication();
@@ -57,6 +66,9 @@ app.UseTenantResolution();
 app.UseAuthorization();
 
 app.MapControllers();
+
+// Liveness/readiness probe (anonymous). Reports the DB reachability.
+app.MapHealthChecks("/health");
 
 app.Run();
 

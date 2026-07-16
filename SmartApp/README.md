@@ -2,7 +2,23 @@
 
 > **Solution فعلية** مبنية على **Clean Architecture** و **.NET 9**، متعدّدة المستأجرين (Multi-Tenant) بعزل تامّ للبيانات وإدارة تفعيل يدوية للعملاء — **بلا اشتراكات ولا فوترة ولا مدفوعات**.
 
-**الحالة:** ✅ Phase 1–11 مكتملة. Foundation → … → Sales → **Dashboard & Reports API**. **115/115 اختبار تمرّ** · لوحة معلومات وتقارير تجميعية فوق دورة الأعمال الكاملة.
+**الحالة:** ✅ Phase 1–12 مكتملة (Backend كامل). Foundation → … → Reports → **Production Readiness**. **116/116 اختبار تمرّ** · مراجعة أمنية + تحصين إنتاجي + وثائق نشر. جاهز لـ Phase 13 (Frontend).
+
+---
+
+## ما أُنجز في Phase 12 (Production Readiness)
+
+تحصين وتجهيز للإنتاج، دون تغيير المعمارية:
+
+- ✅ **Health Check** — `GET /health` (مجهول) يتحقّق من اتصال قاعدة البيانات (`DatabaseHealthCheck`)، لفحوص liveness/readiness.
+- ✅ **CORS whitelist** — سياسة قابلة للضبط من `Cors:AllowedOrigins` (المنشأ نفسه فقط افتراضياً).
+- ✅ **Rate Limiting** — نافذة ثابتة عامّة، **opt-in** عبر `RateLimiting:Enabled` (مطفأة في الاختبارات/التطوير، مفعّلة في الإنتاج).
+- ✅ **`appsettings.Production.json`** — قيم إنتاجية آمنة (الأسرار من متغيّرات البيئة، Swagger مطفأ في الإنتاج، مستويات تسجيل أعلى).
+- ✅ **[SECURITY.md](SECURITY.md)** — مراجعة OWASP Top-10 كاملة + مراجعة Authorization + مراجعة عزل المستأجر (كل نقطة موثّقة بما هو منفّذ فعلاً).
+- ✅ **[DEPLOYMENT.md](DEPLOYMENT.md)** — الإعدادات والأسرار · تطبيق الـ migrations · التشغيل/النشر · الصحّة والتسجيل والمراقبة · **استراتيجية النسخ الاحتياطي والاستعادة** · مراجعة الأداء والفهارس · قائمة تحقّق ما قبل الإطلاق.
+- ✅ **اختبار (1 جديد، 116/116 إجمالاً):** `/health` مجهول ويعيد Healthy. Build 0/0 · بلا model drift.
+
+> **Backend مكتمل.** المتبقّي: Phase 13 — Frontend.
 
 ---
 
@@ -265,9 +281,9 @@ dotnet run --project src/SmartApp.API
 
 ---
 
-## المرحلة التالية (Next: Phase 12 — Production Readiness)
+## المرحلة التالية (Next: Phase 13 — Frontend)
 
-**Production Readiness:** مراجعة أمنية (OWASP + Authorization + Tenant Isolation) · مراجعة الأداء والفهارس · إعدادات الإنتاج (`appsettings.Production`) · استراتيجية التسجيل والنسخ الاحتياطي. ثم Phase 13 (Frontend). التفاصيل في [14-Implementation-Roadmap.md](../SmartApp-Architecture/14-Implementation-Roadmap.md).
+**Frontend Application:** واجهة حقيقية تتّصل بالـ API — مصادقة (تسجيل دخول + refresh + خروج + المستخدم الحالي) · تخطيط (Sidebar/Header/User menu) · قائمة ديناميكية حسب الصلاحيات · صفحات لكل الوحدات (Administration/Catalog/Inventory/Purchasing/Sales/Reports). سيتمّ اختيار التقنية وتبريرها. أساس احترافي (لا Demo).
 
 ---
 
@@ -277,4 +293,4 @@ dotnet run --project src/SmartApp.API
 
 ---
 
-_SmartApp · Phase 1–11 (Foundation → Reports) · بُني على .NET 9 · Clean Architecture._
+_SmartApp · Phase 1–12 (Backend كامل) · بُني على .NET 9 · Clean Architecture._

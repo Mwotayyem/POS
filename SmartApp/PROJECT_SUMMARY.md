@@ -49,9 +49,9 @@ layer). Composite uniqueness = filtered unique index including `TenantId`, `WHER
 | 8 | Inventory (Warehouses, Stock, StockMovements append-only, Adjustments, Transfers, WAC) | ✅ |
 | 9 | Purchasing (Suppliers, Purchase Orders/Invoices/Returns, document numbering) | ✅ |
 | 10 | Sales (Customers, Sales Invoices, Payments, Returns, cost-of-sale snapshot) | ✅ |
-| 11 | **Dashboard & Reports API** (summary, sales/low-stock/product reports) | ✅ |
-| 12 | Production Readiness (security/perf review, deployment config) | ⏳ next |
-| 13 | Frontend Application | ⏳ |
+| 11 | Dashboard & Reports API (summary, sales/low-stock/product reports) | ✅ |
+| 12 | **Production Readiness** (health check, CORS, rate limiting, SECURITY/DEPLOYMENT docs) | ✅ |
+| 13 | Frontend Application | ⏳ next |
 
 ---
 
@@ -101,19 +101,26 @@ architecture docs' Tenant-only / one-row-per-product model (per explicit Phase 8
   (+`/{id}/returns`)
 - **Sales:** `/customers`, `/sales-invoices` (+`/{id}/returns`), `/payments`
 - **Reporting:** `/dashboard/summary`, `/reports/sales`, `/reports/low-stock`, `/reports/products`
+- **Ops:** `/health` (anonymous DB-reachability probe)
 
 Every non-auth, non-profile endpoint is guarded by a `catalog.*` / `inventory.*` / `purchasing.*` /
 `sales.*` / `reports.*` / `users.*` / `roles.*` / `settings.*` permission. The Owner role (seeded per
 tenant) holds every permission.
+
+**Production readiness:** `/health` DB check; configurable CORS whitelist (deny cross-origin by
+default); opt-in global rate limiter (`RateLimiting:Enabled`); `appsettings.Production.json` with
+secrets sourced from environment variables and Swagger disabled. Full OWASP Top-10 + authorization +
+tenant-isolation review in [`SECURITY.md`](SECURITY.md); config/migrations/backup/monitoring in
+[`DEPLOYMENT.md`](DEPLOYMENT.md).
 
 ---
 
 ## Quality gate
 
 - **Build:** 0 warnings / 0 errors (warnings-as-errors).
-- **Tests:** 115 integration tests passing (auth, administration, catalog, inventory, purchasing,
-  sales, reporting) — CRUD, tenant isolation, authorization, validation, plus WAC math, append-only
-  enforcement, the atomic purchase/sales → stock/balance flows, and dashboard/report aggregation.
+- **Tests:** 116 integration tests passing (auth, administration, catalog, inventory, purchasing,
+  sales, reporting, health) — CRUD, tenant isolation, authorization, validation, plus WAC math,
+  append-only enforcement, the atomic purchase/sales → stock/balance flows, and report aggregation.
 - **Migrations:** verified, no pending model changes.
 
 ---
