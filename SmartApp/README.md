@@ -2,7 +2,23 @@
 
 > **Solution فعلية** مبنية على **Clean Architecture** و **.NET 9**، متعدّدة المستأجرين (Multi-Tenant) بعزل تامّ للبيانات وإدارة تفعيل يدوية للعملاء — **بلا اشتراكات ولا فوترة ولا مدفوعات**.
 
-**الحالة:** ✅ Phase 1–10 مكتملة. Foundation → Administration → Catalog → Inventory → Purchasing → **Sales (Customers/Invoices/Payments/Returns)**. **108/108 اختبار تمرّ** · دورة شراء وبيع كاملة تحرّك المخزون والأرصدة ذرّياً.
+**الحالة:** ✅ Phase 1–11 مكتملة. Foundation → … → Sales → **Dashboard & Reports API**. **115/115 اختبار تمرّ** · لوحة معلومات وتقارير تجميعية فوق دورة الأعمال الكاملة.
+
+---
+
+## ما أُنجز في Phase 11 (Dashboard & Reports API)
+
+طبقة تقارير **للقراءة فقط** (بلا جداول/migration جديدة) فوق البيانات الموجودة، كلها معزولة بالمستأجر ومحميّة بـ `[HasPermission("reports.view")]`.
+
+- ✅ **Dashboard** — `GET /api/v1/dashboard/summary?from&to`: إجمالي المبيعات + إجمالي المشتريات + **إجمالي الربح** (Σ (UnitPrice−UnitCost)×(Quantity−ReturnedQty)) + الذمم المدينة/الدائنة القائمة + عدد الفواتير + عدد المنتجات تحت حدّ إعادة الطلب. (نطاق افتراضي: آخر 30 يوماً.)
+- ✅ **Reports:**
+  - `GET /reports/sales?from&to` — المبيعات مجمّعة حسب اليوم.
+  - `GET /reports/low-stock` — المنتجات عند/تحت `ReorderLevel`.
+  - `GET /reports/products?from&to` — أداء المنتجات (كمية/إيراد/تكلفة/ربح) مرتّبة بالربح.
+- ✅ **CQRS خالص** — كل تقرير Query + Handler يجمّع عبر EF (المستأجر مُفلتَر تلقائياً)، الفواتير الملغاة مستثناة، والكميات المرتجعة مطروحة.
+- ✅ **اختبارات (7 جديدة، 115/115 إجمالاً):** الملخّص يعكس المبيعات/المشتريات/الربح · كشف المخزون المنخفض (عدّاد + قائمة) · تقرير المنتجات يجمّع الإيراد/التكلفة/الربح · تقرير المبيعات اليومي · عزل المستأجر (مستأجر بلا نشاط = أصفار) · authorization.
+
+> **لم يُنشأ بعد:** Production hardening (Phase 12) · Frontend (Phase 13).
 
 ---
 
@@ -249,9 +265,9 @@ dotnet run --project src/SmartApp.API
 
 ---
 
-## المرحلة التالية (Next: Phase 11 — Dashboard & Reports API)
+## المرحلة التالية (Next: Phase 12 — Production Readiness)
 
-**Dashboard & Reports:** ملخّص المبيعات + ملخّص المشتريات + ملخّص الأرباح (بناءً على UnitPrice−UnitCost) + المخزون المنخفض (تحت ReorderLevel). تقارير المبيعات/المخزون/المنتجات. التفاصيل في [14-Implementation-Roadmap.md](../SmartApp-Architecture/14-Implementation-Roadmap.md).
+**Production Readiness:** مراجعة أمنية (OWASP + Authorization + Tenant Isolation) · مراجعة الأداء والفهارس · إعدادات الإنتاج (`appsettings.Production`) · استراتيجية التسجيل والنسخ الاحتياطي. ثم Phase 13 (Frontend). التفاصيل في [14-Implementation-Roadmap.md](../SmartApp-Architecture/14-Implementation-Roadmap.md).
 
 ---
 
@@ -261,4 +277,4 @@ dotnet run --project src/SmartApp.API
 
 ---
 
-_SmartApp · Phase 1–10 (Foundation → Sales) · بُني على .NET 9 · Clean Architecture._
+_SmartApp · Phase 1–11 (Foundation → Reports) · بُني على .NET 9 · Clean Architecture._

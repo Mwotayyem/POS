@@ -95,6 +95,9 @@ public static class PermissionCatalog
         new(Permissions.Sales.Delete, "sales", "حذف مستند مبيعات"),
         new(Permissions.Sales.Post, "sales", "دفعات/مرتجعات المبيعات"),
 
+        // ---- Reporting ----
+        new(Permissions.Reports.View, "reports", "عرض لوحة المعلومات والتقارير"),
+
         // ---- System (owner only) ----
         new(Permissions.System.ManageTenants, "system", "إدارة المستأجرين"),
     ];

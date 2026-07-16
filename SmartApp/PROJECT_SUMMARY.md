@@ -48,9 +48,9 @@ layer). Composite uniqueness = filtered unique index including `TenantId`, `WHER
 | 7 | Catalog (Categories, Units, Brands, Products, ProductUnits, Barcodes, Prices) | ✅ |
 | 8 | Inventory (Warehouses, Stock, StockMovements append-only, Adjustments, Transfers, WAC) | ✅ |
 | 9 | Purchasing (Suppliers, Purchase Orders/Invoices/Returns, document numbering) | ✅ |
-| 10 | **Sales** (Customers, Sales Invoices, Payments, Returns, cost-of-sale snapshot) | ✅ |
-| 11 | Dashboard & Reports API | ⏳ next |
-| 12 | Production Readiness (security/perf review, deployment config) | ⏳ |
+| 10 | Sales (Customers, Sales Invoices, Payments, Returns, cost-of-sale snapshot) | ✅ |
+| 11 | **Dashboard & Reports API** (summary, sales/low-stock/product reports) | ✅ |
+| 12 | Production Readiness (security/perf review, deployment config) | ⏳ next |
 | 13 | Frontend Application | ⏳ |
 
 ---
@@ -100,19 +100,20 @@ architecture docs' Tenant-only / one-row-per-product model (per explicit Phase 8
 - **Purchasing:** `/suppliers`, `/purchase-orders` (+confirm/cancel), `/purchase-invoices`
   (+`/{id}/returns`)
 - **Sales:** `/customers`, `/sales-invoices` (+`/{id}/returns`), `/payments`
+- **Reporting:** `/dashboard/summary`, `/reports/sales`, `/reports/low-stock`, `/reports/products`
 
 Every non-auth, non-profile endpoint is guarded by a `catalog.*` / `inventory.*` / `purchasing.*` /
-`sales.*` / `users.*` / `roles.*` / `settings.*` permission. The Owner role (seeded per tenant) holds
-every permission.
+`sales.*` / `reports.*` / `users.*` / `roles.*` / `settings.*` permission. The Owner role (seeded per
+tenant) holds every permission.
 
 ---
 
 ## Quality gate
 
 - **Build:** 0 warnings / 0 errors (warnings-as-errors).
-- **Tests:** 108 integration tests passing (auth, administration, catalog, inventory, purchasing,
-  sales) — CRUD, tenant isolation, authorization, validation, plus WAC math, append-only enforcement,
-  and the atomic purchase-invoice / sales-invoice → stock/balance flows.
+- **Tests:** 115 integration tests passing (auth, administration, catalog, inventory, purchasing,
+  sales, reporting) — CRUD, tenant isolation, authorization, validation, plus WAC math, append-only
+  enforcement, the atomic purchase/sales → stock/balance flows, and dashboard/report aggregation.
 - **Migrations:** verified, no pending model changes.
 
 ---

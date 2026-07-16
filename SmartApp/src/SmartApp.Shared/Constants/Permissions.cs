@@ -132,6 +132,14 @@ public static class Permissions
         public const string Post = "sales.post";
     }
 
+    // ---- Reporting (Phase 11) ----
+
+    public static class Reports
+    {
+        /// <summary>View dashboards and reports (aggregate, read-only).</summary>
+        public const string View = "reports.view";
+    }
+
     public static class System
     {
         /// <summary>System-owner only — manage tenants (create/activate/suspend/disable).</summary>
