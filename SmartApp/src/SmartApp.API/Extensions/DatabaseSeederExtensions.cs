@@ -1,4 +1,6 @@
+using Microsoft.EntityFrameworkCore;
 using SmartApp.Application.Common.Interfaces;
+using SmartApp.Persistence;
 using SmartApp.Persistence.Context;
 using SmartApp.Persistence.Seeding;
 
@@ -13,6 +15,37 @@ namespace SmartApp.API.Extensions;
 /// </summary>
 public static partial class DatabaseSeederExtensions
 {
+    /// <summary>
+    /// When the configured provider is SQLite (development/demo), creates the database file and schema
+    /// if they do not yet exist (<c>EnsureCreated</c>). No-op for SQL Server, whose schema is managed by
+    /// EF Core migrations (<c>dotnet ef database update</c>). Non-fatal: failures are logged only.
+    /// Must run before seeding so the tables exist.
+    /// </summary>
+    public static async Task EnsureSqliteDatabaseAsync(
+        this IHost app, IConfiguration configuration, CancellationToken cancellationToken = default)
+    {
+        if (configuration.GetDbProvider() != DependencyInjection.DbProvider.Sqlite)
+        {
+            return;
+        }
+
+        ILogger logger = app.Services
+            .GetRequiredService<ILoggerFactory>()
+            .CreateLogger(typeof(DatabaseSeederExtensions));
+
+        try
+        {
+            using IServiceScope scope = app.Services.CreateScope();
+            AppDbContext db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            bool created = await db.Database.EnsureCreatedAsync(cancellationToken);
+            LogSqliteReady(logger, created);
+        }
+        catch (Exception ex)
+        {
+            LogSqliteFailed(logger, ex);
+        }
+    }
+
     /// <summary>
     /// Seeds the permission catalog, swallowing (and logging) any failure so an unavailable database
     /// cannot block application startup.
@@ -84,6 +117,14 @@ public static partial class DatabaseSeederExtensions
             LogDevSkippedError(logger, ex);
         }
     }
+
+    [LoggerMessage(Level = LogLevel.Information,
+        Message = "SQLite database ready (created this run: {Created}).")]
+    private static partial void LogSqliteReady(ILogger logger, bool created);
+
+    [LoggerMessage(Level = LogLevel.Warning,
+        Message = "SQLite database initialization failed.")]
+    private static partial void LogSqliteFailed(ILogger logger, Exception exception);
 
     [LoggerMessage(Level = LogLevel.Information,
         Message = "Permission catalog seeding completed ({Inserted} new permissions).")]

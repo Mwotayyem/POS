@@ -170,17 +170,26 @@ type safety mirroring the backend DTOs.
 
 ## How to run
 
-```bash
-# 0) Create the database schema
-dotnet ef database update --project src/SmartApp.Persistence --startup-project src/SmartApp.API
+Development runs on **SQLite by default — no SQL Server required**. The database file
+(`SmartApp_Dev.db`) and schema are created automatically on first startup, and the default Owner login
+is seeded. Two steps:
 
-# Backend
-dotnet build SmartApp.sln
-dotnet run --project src/SmartApp.API      # Swagger: http://localhost:<port>/swagger
+```bash
+# Backend — auto-creates the SQLite DB + seeds the default login on first run
+dotnet run --project src/SmartApp.API      # Swagger: http://localhost:5101/swagger
 
 # Frontend (separate terminal)
-cd frontend && npm install && npm run dev  # http://localhost:5173 (proxies /api to the backend)
+cd frontend && npm install && npm run dev  # http://localhost:5173 (proxies /api to http://localhost:5101)
 ```
+
+Then open http://localhost:5173 and log in with the default account below — no migrations, no manual
+data entry.
+
+**Provider switch.** `Database:Provider` selects the provider: `Sqlite` (default in
+`appsettings.Development.json`) or `SqlServer` (default otherwise / production). For SQL Server, set
+`Database:Provider=SqlServer` + a `SmartAppDb` connection string and create the schema with
+`dotnet ef database update --project src/SmartApp.Persistence --startup-project src/SmartApp.API`
+(migrations are SQL Server-specific; SQLite uses `EnsureCreated` and is for development/demo only).
 
 **Default development login.** On first startup in the Development environment, if the database has
 no users, the app auto-seeds a default tenant (`DEMO`) + Owner role (all permissions) + Owner user so

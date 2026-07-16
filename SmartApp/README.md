@@ -300,23 +300,24 @@ dotnet run --project src/SmartApp.API
 
 ## تشغيل الحلّ الكامل (Backend + Frontend)
 
+**بيئة التطوير تعمل بلا أي SQL Server** — الموفّر الافتراضي هو **SQLite** (ملف محلي `SmartApp_Dev.db` يُنشأ تلقائياً). خطوتان فقط:
+
 ```bash
-# 1) قاعدة البيانات — أنشئ الجداول (SQL Server / LocalDB)
+# 1) Backend API  — ينشئ قاعدة SQLite + يزرع الحساب الافتراضي تلقائياً عند أول إقلاع
 cd SmartApp
-dotnet ef database update --project src/SmartApp.Persistence --startup-project src/SmartApp.API
+dotnet run --project src/SmartApp.API      # Swagger على /swagger (تطوير) — يستمع على http://localhost:5101
 
-# 2) Backend API
-dotnet run --project src/SmartApp.API      # Swagger على /swagger (تطوير)
-
-# 3) Frontend (في نافذة أخرى)
+# 2) Frontend (في نافذة أخرى)
 cd SmartApp/frontend
 npm install
-npm run dev                                 # http://localhost:5173 (يمرّر /api للـ backend)
+npm run dev                                 # http://localhost:5173 (يمرّر /api إلى http://localhost:5101)
 ```
+
+ثم افتح **http://localhost:5173** وسجّل الدخول مباشرةً — لا `ef database update`، لا إعداد قاعدة بيانات، لا إدخال يدوي.
 
 ### تسجيل الدخول الافتراضي (بيئة التطوير)
 
-عند أول إقلاع في بيئة **Development**، يُنشئ التطبيق تلقائياً — إن كانت قاعدة البيانات فارغة — **مستأجراً افتراضياً (DEMO) + دور Owner (كل الصلاحيات) + مستخدم Owner**، فتسجّل الدخول مباشرةً دون أي إدخال يدوي:
+عند أول إقلاع في بيئة **Development**، يُنشئ التطبيق تلقائياً — إن كانت قاعدة البيانات فارغة — **مستأجراً افتراضياً (DEMO) + دور Owner (كل الصلاحيات) + مستخدم Owner**:
 
 | الحقل | القيمة |
 |------|-------|
@@ -324,10 +325,18 @@ npm run dev                                 # http://localhost:5173 (يمرّر 
 | **Password** | `Admin@123456` |
 
 - يعمل من **Swagger** (زرّ Authorize بعد `POST /api/v1/auth/login`) ومن **الواجهة** على `http://localhost:5173`.
-- **آمن:** يعمل فقط عندما `Seed:DevData=true` (مفعّل في `appsettings.Development.json` فقط، ومطفأ في الإنتاج)، و**idempotent** (لا يفعل شيئاً إن وُجد أي مستخدم — لا يكرّر ولا يستبدل بيانات).
-- لتغيير البيانات الافتراضية: عدّل `Seed:OwnerEmail` / `Seed:OwnerPassword` / `Seed:TenantName` / `Seed:TenantCode` في `appsettings.Development.json`.
+- **آمن:** الزرع يعمل فقط عندما `Seed:DevData=true` (مفعّل في `appsettings.Development.json` فقط، ومطفأ في الإنتاج)، و**idempotent** (لا يفعل شيئاً إن وُجد أي مستخدم).
+- لتغيير البيانات الافتراضية: عدّل `Seed:OwnerEmail` / `Seed:OwnerPassword` / `Seed:TenantName` / `Seed:TenantCode`.
 
-> **باختصار:** `dotnet ef database update` → `dotnet run` → افتح Swagger و`http://localhost:5173` → سجّل الدخول بالحساب الافتراضي.
+### الإنتاج / استخدام SQL Server بدل SQLite
+
+في الإنتاج، الموفّر الافتراضي **SQL Server**. لاستخدامه محلياً أيضاً: في `appsettings.Development.json` اضبط `Database:Provider` إلى `SqlServer`، وسلسلة الاتصال `ConnectionStrings:SmartAppDb` إلى SQL Server / LocalDB، ثم أنشئ الجداول عبر migrations:
+
+```bash
+dotnet ef database update --project src/SmartApp.Persistence --startup-project src/SmartApp.API
+```
+
+> **ملاحظة:** الـ migrations (ROWVERSION، ISJSON، DATETIME2…) خاصّة بـ SQL Server. مع SQLite تُنشأ الجداول تلقائياً عبر `EnsureCreated` (بلا migrations)، وهذا مخصّص للتطوير/التجربة فقط — الإنتاج يستخدم SQL Server + migrations.
 
 الأسرار (`Jwt:SigningKey` + `ConnectionStrings:SmartAppDb`) من متغيّرات البيئة / user-secrets. تفاصيل النشر في [DEPLOYMENT.md](DEPLOYMENT.md) والأمن في [SECURITY.md](SECURITY.md). تفاصيل الواجهة في [frontend/README.md](frontend/README.md).
 

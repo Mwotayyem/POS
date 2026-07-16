@@ -23,6 +23,11 @@ secrets.json
 appsettings.*.local.json
 *.pfx
 
+# ===== Local development databases (SQLite) — generated at runtime, never commit =====
+*.db
+*.db-shm
+*.db-wal
+
 # ===== OS =====
 Thumbs.db
 .DS_Store

@@ -14,8 +14,11 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
+      // Proxy /api to the backend. Default targets the `http` launch profile
+      // (`dotnet run` binds http://localhost:5101 by default), which avoids the dev HTTPS
+      // certificate prompt. Override with VITE_API_PROXY_TARGET (e.g. https://localhost:7123).
       '/api': {
-        target: process.env.VITE_API_PROXY_TARGET ?? 'https://localhost:7000',
+        target: process.env.VITE_API_PROXY_TARGET ?? 'http://localhost:5101',
         changeOrigin: true,
         secure: false,
       },

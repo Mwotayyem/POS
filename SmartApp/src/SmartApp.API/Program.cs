@@ -27,6 +27,12 @@ builder.Services
 var app = builder.Build();
 
 // ---------------------------------------------------------------------------
+// SQLite (development/demo) only: create the database file + schema if missing. No-op for SQL Server
+// (whose schema is applied via `dotnet ef database update`). Runs before seeding so tables exist.
+// ---------------------------------------------------------------------------
+await app.EnsureSqliteDatabaseAsync(app.Configuration);
+
+// ---------------------------------------------------------------------------
 // Seed the global permission catalog (idempotent). Non-fatal: an unavailable/unmigrated database
 // is logged and does not prevent startup (handled inside the extension).
 // ---------------------------------------------------------------------------
