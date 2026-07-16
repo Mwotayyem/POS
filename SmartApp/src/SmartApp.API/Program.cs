@@ -32,6 +32,11 @@ var app = builder.Build();
 // ---------------------------------------------------------------------------
 await app.SeedPermissionCatalogAsync();
 
+// Development convenience: seed a default Owner login (tenant + Owner role + user) so the app is
+// usable immediately. Opt-in via Seed:DevData (on in appsettings.Development.json); no-op if any
+// user already exists; never enabled in production configuration.
+await app.SeedDevDataAsync(app.Configuration);
+
 // ---------------------------------------------------------------------------
 // Middleware pipeline — order is load-bearing.
 // (See SmartApp-Architecture/02-Solution-Architecture.md §5 and 03-Project-Structure.md §7)

@@ -43,6 +43,9 @@ public sealed class AdminApiFactory : WebApplicationFactory<Program>
                 ["Jwt:AccessTokenMinutes"] = "15",
                 ["Jwt:RefreshTokenDays"] = "7",
                 ["ConnectionStrings:SmartAppDb"] = "",
+                // Tests provision their own data deterministically — disable dev auto-seeding
+                // (which appsettings.Development.json turns on).
+                ["Seed:DevData"] = "false",
             };
             config.AddInMemoryCollection(testSettings);
         });

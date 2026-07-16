@@ -1,3 +1,4 @@
+using SmartApp.Application.Common.Interfaces;
 using SmartApp.Persistence.Context;
 using SmartApp.Persistence.Seeding;
 
@@ -36,6 +37,54 @@ public static partial class DatabaseSeederExtensions
         }
     }
 
+    /// <summary>
+    /// Development-only: seeds a default Owner login (see <see cref="DevDataSeeder"/>) so the SPA can be
+    /// used immediately. Opt-in via configuration <c>Seed:DevData=true</c> (defaulted on in
+    /// appsettings.Development.json). No-op if any user already exists. Non-fatal: an unavailable
+    /// database logs a warning and does not block startup. Credentials come from
+    /// <c>Seed:OwnerEmail</c> / <c>Seed:OwnerPassword</c> (with safe local defaults).
+    /// </summary>
+    public static async Task SeedDevDataAsync(
+        this IHost app, IConfiguration configuration, CancellationToken cancellationToken = default)
+    {
+        if (!configuration.GetValue("Seed:DevData", false))
+        {
+            return;
+        }
+
+        ILogger logger = app.Services
+            .GetRequiredService<ILoggerFactory>()
+            .CreateLogger(typeof(DatabaseSeederExtensions));
+
+        string ownerEmail = configuration.GetValue("Seed:OwnerEmail", "admin@smartapp.local")!;
+        string ownerPassword = configuration.GetValue("Seed:OwnerPassword", "Admin@123456")!;
+        string tenantName = configuration.GetValue("Seed:TenantName", "Demo Company")!;
+        string tenantCode = configuration.GetValue("Seed:TenantCode", "DEMO")!;
+
+        try
+        {
+            using IServiceScope scope = app.Services.CreateScope();
+            AppDbContext db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            IPasswordHasher hasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
+
+            DevDataSeeder.SeedOutcome outcome = await DevDataSeeder.SeedAsync(
+                db, hasher, ownerEmail, ownerPassword, tenantName, tenantCode, cancellationToken);
+
+            if (outcome == DevDataSeeder.SeedOutcome.Created)
+            {
+                LogDevSeeded(logger, ownerEmail);
+            }
+            else
+            {
+                LogDevSkippedExists(logger);
+            }
+        }
+        catch (Exception ex)
+        {
+            LogDevSkippedError(logger, ex);
+        }
+    }
+
     [LoggerMessage(Level = LogLevel.Information,
         Message = "Permission catalog seeding completed ({Inserted} new permissions).")]
     private static partial void LogSeeded(ILogger logger, int inserted);
@@ -43,4 +92,16 @@ public static partial class DatabaseSeederExtensions
     [LoggerMessage(Level = LogLevel.Warning,
         Message = "Permission catalog seeding was skipped (database unavailable).")]
     private static partial void LogSkipped(ILogger logger, Exception exception);
+
+    [LoggerMessage(Level = LogLevel.Information,
+        Message = "Dev data seeded: created default Owner login '{Email}'.")]
+    private static partial void LogDevSeeded(ILogger logger, string email);
+
+    [LoggerMessage(Level = LogLevel.Information,
+        Message = "Dev data seeding skipped: users already exist.")]
+    private static partial void LogDevSkippedExists(ILogger logger);
+
+    [LoggerMessage(Level = LogLevel.Warning,
+        Message = "Dev data seeding was skipped (database unavailable).")]
+    private static partial void LogDevSkippedError(ILogger logger, Exception exception);
 }

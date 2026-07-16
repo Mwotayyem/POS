@@ -301,15 +301,33 @@ dotnet run --project src/SmartApp.API
 ## تشغيل الحلّ الكامل (Backend + Frontend)
 
 ```bash
-# 1) Backend API
+# 1) قاعدة البيانات — أنشئ الجداول (SQL Server / LocalDB)
 cd SmartApp
+dotnet ef database update --project src/SmartApp.Persistence --startup-project src/SmartApp.API
+
+# 2) Backend API
 dotnet run --project src/SmartApp.API      # Swagger على /swagger (تطوير)
 
-# 2) Frontend (في نافذة أخرى)
+# 3) Frontend (في نافذة أخرى)
 cd SmartApp/frontend
 npm install
 npm run dev                                 # http://localhost:5173 (يمرّر /api للـ backend)
 ```
+
+### تسجيل الدخول الافتراضي (بيئة التطوير)
+
+عند أول إقلاع في بيئة **Development**، يُنشئ التطبيق تلقائياً — إن كانت قاعدة البيانات فارغة — **مستأجراً افتراضياً (DEMO) + دور Owner (كل الصلاحيات) + مستخدم Owner**، فتسجّل الدخول مباشرةً دون أي إدخال يدوي:
+
+| الحقل | القيمة |
+|------|-------|
+| **Email** | `admin@smartapp.local` |
+| **Password** | `Admin@123456` |
+
+- يعمل من **Swagger** (زرّ Authorize بعد `POST /api/v1/auth/login`) ومن **الواجهة** على `http://localhost:5173`.
+- **آمن:** يعمل فقط عندما `Seed:DevData=true` (مفعّل في `appsettings.Development.json` فقط، ومطفأ في الإنتاج)، و**idempotent** (لا يفعل شيئاً إن وُجد أي مستخدم — لا يكرّر ولا يستبدل بيانات).
+- لتغيير البيانات الافتراضية: عدّل `Seed:OwnerEmail` / `Seed:OwnerPassword` / `Seed:TenantName` / `Seed:TenantCode` في `appsettings.Development.json`.
+
+> **باختصار:** `dotnet ef database update` → `dotnet run` → افتح Swagger و`http://localhost:5173` → سجّل الدخول بالحساب الافتراضي.
 
 الأسرار (`Jwt:SigningKey` + `ConnectionStrings:SmartAppDb`) من متغيّرات البيئة / user-secrets. تفاصيل النشر في [DEPLOYMENT.md](DEPLOYMENT.md) والأمن في [SECURITY.md](SECURITY.md). تفاصيل الواجهة في [frontend/README.md](frontend/README.md).
 

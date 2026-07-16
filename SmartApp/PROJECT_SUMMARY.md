@@ -118,11 +118,12 @@ tenant-isolation review in [`SECURITY.md`](SECURITY.md); config/migrations/backu
 ## Quality gate
 
 - **Build:** 0 warnings / 0 errors (warnings-as-errors).
-- **Tests:** 117 integration tests passing (auth, administration, catalog, inventory, purchasing,
+- **Tests:** 119 integration tests passing (auth, administration, catalog, inventory, purchasing,
   sales, reporting, health) — CRUD, tenant isolation, authorization, validation, plus WAC math,
-  append-only enforcement, the atomic purchase/sales → stock/balance flows, report aggregation, and
-  one consolidated end-to-end smoke test that walks login → Product → Customer → Purchase Invoice →
-  Sales Invoice → Dashboard over the real HTTP pipeline.
+  append-only enforcement, the atomic purchase/sales → stock/balance flows, report aggregation, a
+  consolidated end-to-end smoke test that walks login → Product → Customer → Purchase Invoice →
+  Sales Invoice → Dashboard over the real HTTP pipeline, and the dev-seeder (default Owner login works
+  out of the box + idempotency).
 - **Migrations:** verified, no pending model changes (32 `DbSet`s ↔ 32 `CreateTable` calls).
 
 ### Final verification (2026-07-16)
@@ -170,6 +171,9 @@ type safety mirroring the backend DTOs.
 ## How to run
 
 ```bash
+# 0) Create the database schema
+dotnet ef database update --project src/SmartApp.Persistence --startup-project src/SmartApp.API
+
 # Backend
 dotnet build SmartApp.sln
 dotnet run --project src/SmartApp.API      # Swagger: http://localhost:<port>/swagger
@@ -177,6 +181,20 @@ dotnet run --project src/SmartApp.API      # Swagger: http://localhost:<port>/sw
 # Frontend (separate terminal)
 cd frontend && npm install && npm run dev  # http://localhost:5173 (proxies /api to the backend)
 ```
+
+**Default development login.** On first startup in the Development environment, if the database has
+no users, the app auto-seeds a default tenant (`DEMO`) + Owner role (all permissions) + Owner user so
+you can log in immediately — from Swagger or the SPA:
+
+| Field | Value |
+|-------|-------|
+| Email | `admin@smartapp.local` |
+| Password | `Admin@123456` |
+
+This is gated by `Seed:DevData` (on in `appsettings.Development.json`, off in production), idempotent
+(a no-op if any user already exists — never overwrites data), and configurable via
+`Seed:OwnerEmail` / `Seed:OwnerPassword` / `Seed:TenantName` / `Seed:TenantCode`. See
+[`DevDataSeeder`](src/SmartApp.Persistence/Seeding/DevDataSeeder.cs).
 
 SQL Server connection string and JWT signing key come from user-secrets / environment variables
 (empty in `appsettings.json`). A dev-only signing key + LocalDB string live in
