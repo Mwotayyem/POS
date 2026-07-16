@@ -4,6 +4,7 @@ using SmartApp.Application.Common.Interfaces;
 using SmartApp.Domain.Catalog;
 using SmartApp.Domain.Common;
 using SmartApp.Domain.Identity;
+using SmartApp.Domain.Inventory;
 using SmartApp.Domain.Tenancy;
 
 namespace SmartApp.Persistence.Context;
@@ -54,6 +55,11 @@ public sealed class AppDbContext : DbContext, IApplicationDbContext
     public DbSet<ProductUnit> ProductUnits => Set<ProductUnit>();
     public DbSet<ProductBarcode> ProductBarcodes => Set<ProductBarcode>();
     public DbSet<ProductPrice> ProductPrices => Set<ProductPrice>();
+
+    // ---- Inventory DbSets (Phase 8) ----
+    public DbSet<Warehouse> Warehouses => Set<Warehouse>();
+    public DbSet<Stock> Stocks => Set<Stock>();
+    public DbSet<StockMovement> StockMovements => Set<StockMovement>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -111,16 +117,17 @@ public sealed class AppDbContext : DbContext, IApplicationDbContext
             }
         }
 
-        ApplyIdentityTenantFilters(modelBuilder);
+        ApplyNonBaseEntityTenantFilters(modelBuilder);
     }
 
     /// <summary>
-    /// Applies tenant query filters to Identity entities that carry a TenantId but do NOT inherit
-    /// <see cref="BaseEntity"/> (nullable-tenant users/tokens, keyless-style join tables). The filter
-    /// treats a null current tenant (system-owner / unresolved) as "no restriction", matching the
-    /// BaseEntity filter behavior. See SmartApp-Architecture/09-Multi-Tenant.md §6.
+    /// Applies tenant query filters to tenant-owned entities that carry a TenantId but do NOT inherit
+    /// <see cref="BaseEntity"/> (nullable-tenant users/tokens, keyless-style join tables, and the
+    /// append-only <see cref="StockMovement"/>). The filter treats a null current tenant (system-owner
+    /// / unresolved) as "no restriction", matching the BaseEntity filter behavior.
+    /// See SmartApp-Architecture/09-Multi-Tenant.md §6.
     /// </summary>
-    private void ApplyIdentityTenantFilters(ModelBuilder modelBuilder)
+    private void ApplyNonBaseEntityTenantFilters(ModelBuilder modelBuilder)
     {
         // Nullable TenantId (system owner rows have null): visible when unrestricted or matching.
         modelBuilder.Entity<AppUser>().HasQueryFilter(u =>
@@ -135,6 +142,10 @@ public sealed class AppDbContext : DbContext, IApplicationDbContext
 
         modelBuilder.Entity<RolePermission>().HasQueryFilter(rp =>
             _tenantProvider.TenantIdOrNull == null || rp.TenantId == _tenantProvider.TenantIdOrNull);
+
+        // Append-only ledger (not a BaseEntity, no soft-delete).
+        modelBuilder.Entity<StockMovement>().HasQueryFilter(m =>
+            _tenantProvider.TenantIdOrNull == null || m.TenantId == _tenantProvider.TenantIdOrNull);
     }
 
     public override int SaveChanges()

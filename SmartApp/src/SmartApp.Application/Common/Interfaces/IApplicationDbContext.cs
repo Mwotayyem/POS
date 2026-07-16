@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using SmartApp.Domain.Catalog;
 using SmartApp.Domain.Identity;
+using SmartApp.Domain.Inventory;
 using SmartApp.Domain.Tenancy;
 
 namespace SmartApp.Application.Common.Interfaces;
@@ -34,6 +35,11 @@ public interface IApplicationDbContext
     DbSet<ProductUnit> ProductUnits { get; }
     DbSet<ProductBarcode> ProductBarcodes { get; }
     DbSet<ProductPrice> ProductPrices { get; }
+
+    // ---- Inventory ----
+    DbSet<Warehouse> Warehouses { get; }
+    DbSet<Stock> Stocks { get; }
+    DbSet<StockMovement> StockMovements { get; }
 
     /// <summary>
     /// Persists pending changes. Tenant stamping, soft-delete conversion, and audit-field

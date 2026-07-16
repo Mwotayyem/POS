@@ -3,6 +3,8 @@ using FluentValidation;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using SmartApp.Application.Common.Behaviors;
+using SmartApp.Application.Common.Interfaces;
+using SmartApp.Application.Inventory.Services;
 
 namespace SmartApp.Application;
 
@@ -25,6 +27,10 @@ public static class DependencyInjection
 
         // MediatR pipeline behaviors (order matters). Validation runs before every handler.
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+
+        // Inventory: the stock ledger (WAC + append-only movements) is the single entry point for
+        // stock changes, shared by adjustments/transfers now and Sales/Purchases later.
+        services.AddScoped<IStockLedger, StockLedger>();
 
         // NOTE (later): AutoMapper profiles registered here once a mapping library is finalized.
 

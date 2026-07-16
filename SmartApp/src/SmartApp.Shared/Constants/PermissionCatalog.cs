@@ -58,6 +58,17 @@ public static class PermissionCatalog
         new(Permissions.Products.Update, "catalog", "تعديل منتج"),
         new(Permissions.Products.Delete, "catalog", "حذف منتج"),
 
+        // ---- Inventory: Warehouses ----
+        new(Permissions.Warehouses.View, "inventory", "عرض المستودعات"),
+        new(Permissions.Warehouses.Create, "inventory", "إنشاء مستودع"),
+        new(Permissions.Warehouses.Update, "inventory", "تعديل مستودع"),
+        new(Permissions.Warehouses.Delete, "inventory", "حذف مستودع"),
+
+        // ---- Inventory: Stock ----
+        new(Permissions.Stock.View, "inventory", "عرض المخزون والحركات"),
+        new(Permissions.Stock.Adjust, "inventory", "تسوية المخزون"),
+        new(Permissions.Stock.Transfer, "inventory", "تحويل المخزون بين المستودعات"),
+
         // ---- System (owner only) ----
         new(Permissions.System.ManageTenants, "system", "إدارة المستأجرين"),
     ];

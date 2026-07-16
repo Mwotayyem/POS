@@ -68,6 +68,28 @@ public static class Permissions
         public const string Delete = "catalog.products.delete";
     }
 
+    // ---- Inventory module (Phase 8) ----
+
+    public static class Warehouses
+    {
+        public const string View = "inventory.warehouses.view";
+        public const string Create = "inventory.warehouses.create";
+        public const string Update = "inventory.warehouses.update";
+        public const string Delete = "inventory.warehouses.delete";
+    }
+
+    public static class Stock
+    {
+        /// <summary>View stock balances and movement history.</summary>
+        public const string View = "inventory.stock.view";
+
+        /// <summary>Perform stock adjustments (increase/decrease with a reason).</summary>
+        public const string Adjust = "inventory.stock.adjust";
+
+        /// <summary>Transfer stock between warehouses.</summary>
+        public const string Transfer = "inventory.stock.transfer";
+    }
+
     public static class System
     {
         /// <summary>System-owner only — manage tenants (create/activate/suspend/disable).</summary>

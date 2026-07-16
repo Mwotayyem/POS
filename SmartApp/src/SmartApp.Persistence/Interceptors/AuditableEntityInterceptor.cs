@@ -43,6 +43,8 @@ public sealed class AuditableEntityInterceptor : SaveChangesInterceptor
             return;
         }
 
+        GuardAppendOnly(context);
+
         DateTime now = _dateTime.UtcNow;
         long? userId = _currentUser.UserId;
 
@@ -71,6 +73,25 @@ public sealed class AuditableEntityInterceptor : SaveChangesInterceptor
                 entry.Entity.IsDeleted = true;
                 entry.Entity.DeletedDate = now;
                 entry.Entity.DeletedBy = userId;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Enforces the append-only contract: rows implementing <see cref="IAppendOnly"/> (e.g.
+    /// StockMovements) may only be inserted — updating or deleting one is a programming error and
+    /// throws. Corrections must be made with a new reversing entry.
+    /// See SmartApp-Architecture/13-Development-Rules.md §6.3.
+    /// </summary>
+    private static void GuardAppendOnly(DbContext context)
+    {
+        foreach (EntityEntry<IAppendOnly> entry in context.ChangeTracker.Entries<IAppendOnly>())
+        {
+            if (entry.State is EntityState.Modified or EntityState.Deleted)
+            {
+                throw new InvalidOperationException(
+                    $"Append-only entity '{entry.Entity.GetType().Name}' cannot be modified or deleted. " +
+                    "Record a new reversing entry instead.");
             }
         }
     }

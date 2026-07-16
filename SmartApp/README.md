@@ -2,7 +2,23 @@
 
 > **Solution فعلية** مبنية على **Clean Architecture** و **.NET 9**، متعدّدة المستأجرين (Multi-Tenant) بعزل تامّ للبيانات وإدارة تفعيل يدوية للعملاء — **بلا اشتراكات ولا فوترة ولا مدفوعات**.
 
-**الحالة:** ✅ Phase 1–7 مكتملة. Foundation + Tenant Core + Identity & RBAC + API + Authentication + Administration + **Catalog Module (Categories/Units/Brands/Products/Barcodes/Prices)**. **61/61 اختبار تمرّ** · أول Business Module جاهز.
+**الحالة:** ✅ Phase 1–8 مكتملة. Foundation + Tenant + Identity/RBAC + API/Auth + Administration + Catalog + **Inventory (Warehouses/Stock/Movements/Adjustments/Transfers)**. **80/80 اختبار تمرّ** · مخزون بتكلفة WAC وسجلّ حركات append-only.
+
+---
+
+## ما أُنجز في Phase 8 (Inventory Module)
+
+وحدة المخزون فوق الكتالوج، بنفس القوالب. **ملاحظة تصميم:** الطلب أضاف Warehouses + Stock لكل مستودع + Transfers، وهي **توسعة مقصودة وموثّقة** تتجاوز نموذج الوثائق (التي تحصر Stock بصف واحد لكل منتج بلا مستودعات) — مع الالتزام الحرفي بقواعد WAC و append-only.
+
+- ✅ **3 كيانات:** `Warehouse` (مستودع، افتراضي واحد)، `Stock` (رصيد لكل product+warehouse: QtyOnHand + AvgCost)، `StockMovement` (**append-only** — IN/OUT/ADJUST/TRANSFER).
+- ✅ **قاعدة Append-Only مفروضة على مستوى الـ Persistence** — `AuditableEntityInterceptor` يرمي استثناءً عند أي محاولة UPDATE/DELETE لأي كيان `IAppendOnly` (StockMovement). التصحيح = حركة معاكسة جديدة.
+- ✅ **`IStockLedger`** — نقطة الدخول الوحيدة لتغيير المخزون: يحسب **WAC** بدقّة حسب [13-Development-Rules.md §6.2](../SmartApp-Architecture/13-Development-Rules.md) (وارد: `(qty*avg + inQty*inCost)/(qty+inQty)`؛ صادر: يُخصَم بالمتوسّط الحالي والمتوسّط لا يتغيّر)، يكتب الحركة، ويزامن `Product.CostPrice`. تستخدمه المبيعات/المشتريات لاحقاً عبر الواجهة لا مباشرةً.
+- ✅ **العمليات:** Warehouses CRUD · Stock balances/movements queries · **Adjust** (كمية موقّعة → حركة) · **Transfer** (حركتان مرتبطتان OUT+IN بنفس المرجع، بتكلفة المصدر، في معاملة واحدة). المخزون السالب مرفوض.
+- ✅ **API Controllers** — `/api/v1/warehouses` + `/api/v1/stock/{balances,movements,adjust,transfer}`، محميّة بـ `[HasPermission("inventory.*")]`.
+- ✅ **Migration `AddInventory`** — 3 جداول + فهارس (رصيد فريد لكل product+warehouse، فهرس حركات by-product-date). **بلا model drift**.
+- ✅ **اختبارات (19 جديدة، 80/80 إجمالاً):** Warehouse CRUD + قاعدة الافتراضي الواحد · WAC عند وارد ثانٍ · الصادر لا يغيّر المتوسّط · رفض ما دون الصفر · التحويل ينقل الكمية ويحفظ التكلفة · التحويل بمخزون غير كافٍ لا يترك حالة جزئية · Product.CostPrice يتتبّع WAC · append-only (insert ينجح، update/delete يرمي) · عزل المستأجر · authorization.
+
+> **لم يُنشأ بعد:** Purchasing · Sales · Reports · Frontend.
 
 ---
 
@@ -199,9 +215,9 @@ dotnet run --project src/SmartApp.API
 
 ---
 
-## المرحلة التالية (Next: Phase 8 — Inventory)
+## المرحلة التالية (Next: Phase 9 — Purchasing)
 
-**Inventory Module:** Warehouses + Stock (QtyOnHand/AvgCost) + StockMovements (Append-Only: IN/OUT/ADJUST/TRANSFER — غير قابلة للحذف، كل تعديل مخزون يولّد Movement) + Adjustments + Transfers. التفاصيل في [14-Implementation-Roadmap.md](../SmartApp-Architecture/14-Implementation-Roadmap.md).
+**Purchasing Module:** Suppliers + Purchase Orders (status workflow) + Purchase Invoices (بنود + مجاميع) + Purchase Returns. عند استلام فاتورة شراء → حركة مخزون IN عبر `IStockLedger` + تحديث الرصيد و WAC. التفاصيل في [14-Implementation-Roadmap.md](../SmartApp-Architecture/14-Implementation-Roadmap.md).
 
 ---
 
@@ -211,4 +227,4 @@ dotnet run --project src/SmartApp.API
 
 ---
 
-_SmartApp · Phase 1–7 (Foundation → Catalog) · بُني على .NET 9 · Clean Architecture._
+_SmartApp · Phase 1–8 (Foundation → Inventory) · بُني على .NET 9 · Clean Architecture._

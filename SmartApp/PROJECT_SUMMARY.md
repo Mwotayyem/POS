@@ -45,9 +45,9 @@ layer). Composite uniqueness = filtered unique index including `TenantId`, `WHER
 | 4 | Identity & RBAC (User/Role/Permission/UserRole/RolePermission/RefreshToken, `AddIdentity`) | ✅ |
 | 5 | API + Authentication (envelope, login/refresh/logout, permission authorization) | ✅ |
 | 6 | Administration (Users, Roles, Permissions, Tenant Settings, Profile + seeding) | ✅ |
-| 7 | **Catalog** (Categories, Units, Brands, Products, ProductUnits, Barcodes, Prices) | ✅ |
-| 8 | Inventory (Warehouses, Stock, StockMovements, Adjustments, Transfers) | ⏳ next |
-| 9 | Purchasing (Suppliers, Purchase Orders/Invoices/Returns) | ⏳ |
+| 7 | Catalog (Categories, Units, Brands, Products, ProductUnits, Barcodes, Prices) | ✅ |
+| 8 | **Inventory** (Warehouses, Stock, StockMovements append-only, Adjustments, Transfers, WAC) | ✅ |
+| 9 | Purchasing (Suppliers, Purchase Orders/Invoices/Returns) | ⏳ next |
 | 10 | Sales (Customers, Sales Invoices, Payments, Returns) | ⏳ |
 | 11 | Dashboard & Reports API | ⏳ |
 | 12 | Production Readiness (security/perf review, deployment config) | ⏳ |
@@ -61,8 +61,15 @@ layer). Composite uniqueness = filtered unique index including `TenantId`, `WHER
 **Identity:** `Users`, `Roles`, `Permissions`, `UserRoles`, `RolePermissions`, `RefreshTokens`
 **Catalog:** `Categories` (tree), `Units`, `Brands`, `Products`, `ProductUnits`, `ProductBarcodes`,
 `ProductPrices`
+**Inventory:** `Warehouses`, `Stocks` (per product+warehouse), `StockMovements` (append-only)
 
-**Migrations:** `InitialCreate` → `AddIdentity` → `AddCatalog` (no model drift).
+**Migrations:** `InitialCreate` → `AddIdentity` → `AddCatalog` → `AddInventory` (no model drift).
+
+**Inventory notes:** stock changes flow through `IStockLedger`, which recomputes weighted-average
+cost (inbound), records an append-only movement, and keeps `Product.CostPrice` in sync. Append-only
+is enforced by the persistence interceptor (any UPDATE/DELETE of an `IAppendOnly` row throws).
+Warehouses + per-warehouse stock + transfers are a deliberate, documented extension beyond the
+architecture docs' Tenant-only / one-row-per-product model (per explicit Phase 8 requirements).
 
 ---
 
@@ -72,17 +79,18 @@ layer). Composite uniqueness = filtered unique index including `TenantId`, `WHER
 - **Administration:** `/users` (+ activate/deactivate), `/roles` (+ `/{id}/permissions`),
   `/permissions`, `/tenant/settings`, `/profile` (+ change-password)
 - **Catalog:** `/categories`, `/units`, `/brands`, `/products` (search + category/brand filters)
+- **Inventory:** `/warehouses`, `/stock/balances`, `/stock/movements`, `/stock/adjust`, `/stock/transfer`
 
-Every non-auth, non-profile endpoint is guarded by a `catalog.*` / `users.*` / `roles.*` /
-`settings.*` permission. The Owner role (seeded per tenant) holds every permission.
+Every non-auth, non-profile endpoint is guarded by a `catalog.*` / `inventory.*` / `users.*` /
+`roles.*` / `settings.*` permission. The Owner role (seeded per tenant) holds every permission.
 
 ---
 
 ## Quality gate
 
 - **Build:** 0 warnings / 0 errors (warnings-as-errors).
-- **Tests:** 61 integration tests passing (auth, administration, catalog) — CRUD, tenant isolation,
-  authorization, and validation for every module.
+- **Tests:** 80 integration tests passing (auth, administration, catalog, inventory) — CRUD, tenant
+  isolation, authorization, validation, plus WAC math and append-only enforcement for inventory.
 - **Migrations:** verified, no pending model changes.
 
 ---
