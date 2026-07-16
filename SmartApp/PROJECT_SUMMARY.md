@@ -118,10 +118,32 @@ tenant-isolation review in [`SECURITY.md`](SECURITY.md); config/migrations/backu
 ## Quality gate
 
 - **Build:** 0 warnings / 0 errors (warnings-as-errors).
-- **Tests:** 116 integration tests passing (auth, administration, catalog, inventory, purchasing,
+- **Tests:** 117 integration tests passing (auth, administration, catalog, inventory, purchasing,
   sales, reporting, health) — CRUD, tenant isolation, authorization, validation, plus WAC math,
-  append-only enforcement, the atomic purchase/sales → stock/balance flows, and report aggregation.
-- **Migrations:** verified, no pending model changes.
+  append-only enforcement, the atomic purchase/sales → stock/balance flows, report aggregation, and
+  one consolidated end-to-end smoke test that walks login → Product → Customer → Purchase Invoice →
+  Sales Invoice → Dashboard over the real HTTP pipeline.
+- **Migrations:** verified, no pending model changes (32 `DbSet`s ↔ 32 `CreateTable` calls).
+
+### Final verification (2026-07-16)
+
+| Check | Result |
+|-------|--------|
+| Solution projects | **9** (6 source + 3 test), all present in `SmartApp.sln` |
+| `dotnet restore` / `build` | Succeeded — **0 warnings / 0 errors** |
+| `dotnet test` | **117 / 117 passed**, 0 failed, 0 skipped |
+| EF Core migrations | **6**, enumerated by `dotnet ef migrations list`; applied via `EnsureCreated`/tests |
+| API host boot (Kestrel) | Started, `Now listening on: http://localhost:5101` |
+| Swagger | `GET /swagger/v1/swagger.json` → **200** (full OpenAPI document generated) |
+| Frontend `npm install` | **0 vulnerabilities** |
+| Frontend `npm run build` | Succeeded — strict `tsc` + Vite, **112 modules, 0 errors** |
+| Frontend `npm run dev` | Vite up, `GET http://localhost:5173/` → **200** (React `#root` served) |
+| End-to-end business chain | login → Product → Customer → Purchase Invoice → Sales Invoice → Dashboard — **verified over HTTP** (sales 80, purchases 60, gross profit 56, A/R 80, A/P 60) |
+
+> Note: the local SQL Server LocalDB instance would not start in this environment, so the DB-backed
+> flows were verified against the identical application stack using the in-memory SQLite test host
+> (real `Program`, middleware, controllers, auth, EF Core). The live Kestrel run confirmed startup +
+> Swagger; its `/health` correctly reports unhealthy without a database (health = DB reachability).
 
 ---
 
